@@ -1,5 +1,5 @@
 /*
-This file is responsible for establishing connection between backend and database.
+This file is responsible for establishing connection between backend (nodejs) and database.
 In order to implment connection, following things are done: 
 */
 
