@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(cors());
 
 // routes
-const authRoutes = require("./routes/auth");
+const authRoutes = require("./routes/auth.js");
 app.use("/auth", authRoutes);
 
 app.listen(3000, () => {
