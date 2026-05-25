@@ -54,4 +54,41 @@ async function register(req, res) {
   }
 }
 
-module.exports = { register };
+async function login(req, res) {
+  try {
+    // extracting from request body
+    const email = req.body.email;
+    const password = req.body.password;
+
+    // validating input
+    if (!email || !password) {
+      return res.status(400).json({ message: "Invalid input" });
+    }
+
+    // checking user typed email exists in the db or not
+    // ------------------------------------------------
+    const result = await pool.query("SELECT * FROM users where email = $1", [
+      email,
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+    // ----------------------------------------------------
+
+    // checking user typed password is correct or not
+    // -----------------------------------------------
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+    // ------------------------------------------------
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+}
+
+module.exports = { register, login };
