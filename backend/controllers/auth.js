@@ -1,5 +1,6 @@
 const pool = require("../models/db.js");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 // This function is for the logic of '/register' route
 async function register(req, res) {
@@ -60,7 +61,7 @@ async function login(req, res) {
     const email = req.body.email;
     const password = req.body.password;
 
-    // validating input
+    // validating input (input validation)
     if (!email || !password) {
       return res.status(400).json({ message: "Invalid input" });
     }
@@ -85,6 +86,18 @@ async function login(req, res) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
     // ------------------------------------------------
+
+    // generating jwt token ('jwt.sign()' is the method that both generates and signs the token in one step)
+    const token = jwt.sign(
+      { id: user.user_id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
+    // sending token to frontend as a response
+    return res.status(200).json({
+      message: "Login successful",
+      token, // similar to token: token - instead of this, used something called 'object shorthand' of js
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Server error" });
