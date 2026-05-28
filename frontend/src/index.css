@@ -1,47 +1,55 @@
-/* v4 tailwind requires no import base/components/utilities */
-@import "tailwindcss";
 /* inter font */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap");
+/* v4 tailwind requires no import base/components/utilities */
+@import "tailwindcss";
 
 * {
   font-family: "Inter", sans-serif;
 }
 
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.input-animated {
+  position: relative;
 }
 
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(200%);
-  }
+.input-animated::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #6366f1;
+  transition: width 0.3s ease;
 }
 
-.animate-fade-up {
-  animation: fade-up 0.7s cubic-bezier(0.19, 1, 0.22, 1) both;
+.input-animated:focus-within::after {
+  width: 100%;
 }
-.delay-100 {
-  animation-delay: 100ms;
+
+.btn-fill {
+  position: relative;
+  overflow: hidden;
+  background-color: #111827;
+  color: white;
 }
-.delay-200 {
-  animation-delay: 200ms;
+
+.btn-fill::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  background-color: #6366f1;
+  transition: height 0.4s ease;
+  z-index: 0;
 }
-.delay-300 {
-  animation-delay: 300ms;
+
+.btn-fill:hover::after {
+  height: 100%;
 }
-.delay-400 {
-  animation-delay: 400ms;
-}
-.delay-500 {
-  animation-delay: 500ms;
+
+.btn-fill span {
+  position: relative;
+  z-index: 1;
 }

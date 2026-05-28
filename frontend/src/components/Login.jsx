@@ -1,4 +1,4 @@
-import leftSideImage from "../assets/login.jpg";
+import leftSideImage from "../assets/sign-in.jpg";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 
@@ -10,7 +10,7 @@ function Login() {
         <div className="w-1/2">
           <img
             src={leftSideImage}
-            alt="loginImage"
+            alt="signInImage"
             className="w-full h-auto object-cover"
           />
         </div>
@@ -20,14 +20,14 @@ function Login() {
           <p className="mt-2">Sign in to your account</p>
           {/* OAuth buttons */}
           <div className="flex gap-3 mt-6">
-            <button className="flex items-center justify-center gap-2 border border-gray-300 rounded-full px-4 py-2 w-full text-sm font-medium hover:bg-gray-50 hover:border-indigo-500 transition-colors cursor-pointer relative group">
+            <button className="flex items-center justify-center gap-2 border border-gray-300 rounded-full px-4 py-2 w-full text-sm font-medium hover:bg-gray-50 hover:border-indigo-500 transition-colors cursor-not-allowed relative group">
               <FcGoogle />
               Google
               <span className="absolute -top-6  left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                 Coming Soon
               </span>
             </button>
-            <button className="flex items-center justify-center gap-2 border border-gray-300 rounded-full px-4 py-2 w-full text-sm font-medium hover:bg-gray-50 hover:border-indigo-500 transition-colors cursor-pointer relative group">
+            <button className="flex items-center justify-center gap-2 border border-gray-300 rounded-full px-4 py-2 w-full text-sm font-medium hover:bg-gray-50 hover:border-indigo-500 transition-colors cursor-not-allowed relative group">
               <FaApple />
               Apple ID
               <span className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
@@ -45,21 +45,25 @@ function Login() {
           </div>
           {/* Login form */}
           <form className="flex flex-col gap-4">
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              className="border px-4 py-2 text-sm outline-none focus:border-indigo-500 transition-colors"
-            />
+            <div className="input-animated">
+              <input
+                type="email"
+                placeholder="Email"
+                className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors"
+              />
+            </div>
+            <div className="input-animated">
+              <input
+                type="password"
+                placeholder="Password"
+                className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors"
+              />
+            </div>
             <button
               type="submit"
-              className="w-full bg-indigo-600 text-white py-2 font-medium hover:bg-indigo-700 transition-colors cursor-pointer"
+              className="btn-fill w-full  text-white py-2 font-medium cursor-pointer"
             >
-              Sign in
+              <span>Sign in</span>
             </button>
           </form>
           {/* 'Don't have account' part */}
