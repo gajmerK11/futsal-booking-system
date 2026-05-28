@@ -1,22 +1,24 @@
 import leftSideImage from "../assets/sign-in.jpg";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-100">
-      <div className="flex rounded-2xl shadow-2xl overflow-hidden w-[900px]">
+      {/* Card div */}
+      <div className="flex flex-col md:flex-row md:rounded-2xl shadow-2xl overflow-hidden md:w-[900px] w-full md:h-full md:mx-5">
         {/* Left side image */}
-        <div className="w-1/2">
+        <div className="w-full md:w-1/2">
           <img
             src={leftSideImage}
             alt="signInImage"
-            className="w-full h-auto object-cover"
+            className="w-full h-full object-cover"
           />
         </div>
         {/* Right side form */}
-        <div className="w-1/2 p-10">
-          <h2 className="text-3xl font-bold">JOIN THE LEAGUE</h2>
+        <div className="w-full md:w-1/2 p-10">
+          <h2 className="text-2xl md:text-3xl font-bold">JOIN THE LEAGUE</h2>
           <p className="mt-2">Sign in to your account</p>
           {/* OAuth buttons */}
           <div className="flex gap-3 mt-6">
@@ -69,9 +71,12 @@ function Login() {
           {/* 'Don't have account' part */}
           <p className="text-sm text-center text-gray-500 mt-4">
             Don't have an account?{" "}
-            <span className="text-indigo-600 font-semibold cursor-pointer">
+            <Link
+              to="/register"
+              className="text-indigo-600 font-semibold cursor-pointer"
+            >
               Sign up
-            </span>
+            </Link>
           </p>
         </div>
       </div>

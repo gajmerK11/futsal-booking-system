@@ -1,13 +1,14 @@
 import leftSideImage from "../assets/register.jpg";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-100">
-      <div className="flex rounded-2xl shadow-2xl overflow-hidden w-[900px] h-[540px]">
+      <div className="flex flex-col md:flex-row md:rounded-2xl shadow-2xl overflow-hidden md:w-[900px] w-full md:h-[540px] md:mx-5">
         {/* Left side image */}
-        <div className="w-1/2">
+        <div className="w-full md:w-1/2">
           <img
             src={leftSideImage}
             alt="registerImage"
@@ -15,8 +16,8 @@ function Register() {
           />
         </div>
         {/* Right side form */}
-        <div className="w-1/2 p-10">
-          <h2 className="text-3xl font-bold">JOIN THE LEAGUE</h2>
+        <div className="w-full md:w-1/2 p-10">
+          <h2 className="text-2xl md:text-3xl font-bold">JOIN THE LEAGUE</h2>
           <p className="mt-2">Create an account</p>
           {/* Register form */}
           <form className="flex flex-col gap-4 mt-4">
@@ -49,7 +50,7 @@ function Register() {
               />
             </div>
             <select
-              className="w-full bg-gray-100 border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:bg-white transition-colors pr-8"
+              className="w-full bg-gray-100 border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors pr-8"
               defaultValue=""
             >
               <option value="" disabled hidden>
@@ -67,9 +68,12 @@ function Register() {
             {/* 'Already have an account?' part */}
             <p className="text-sm text-center text-gray-500">
               Already have an account?{" "}
-              <span className="text-indigo-600 font-semibold cursor-pointer">
+              <Link
+                to="/login"
+                className="text-indigo-600 font-semibold cursor-pointer"
+              >
                 Sign in
-              </span>
+              </Link>
             </p>
           </form>
         </div>
