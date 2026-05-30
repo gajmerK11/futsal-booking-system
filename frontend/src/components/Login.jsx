@@ -2,8 +2,33 @@ import leftSideImage from "../assets/sign-in.jpg";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 function Login() {
+  // Declaring state variables
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginMessage, setLoginMessage] = useState("");
+
+  // 'Submit' handler function
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const response = await fetch("http://localhost:3000/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setLoginMessage(data.message);
+    } else {
+      setLoginMessage("Something went wrong");
+    }
+  }
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-100">
       {/* Card div */}
@@ -46,10 +71,14 @@ function Login() {
             <div className="flex-1 h-px bg-gray-200"></div>
           </div>
           {/* Login form */}
-          <form className="flex flex-col gap-4">
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="input-animated">
               <input
                 type="email"
+                // Connecting state variables
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                // --------------------------------------
                 placeholder="Email"
                 className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors"
               />
@@ -57,6 +86,10 @@ function Login() {
             <div className="input-animated">
               <input
                 type="password"
+                // Connecting state variables
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                // ------------------------------------------
                 placeholder="Password"
                 className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors"
               />
