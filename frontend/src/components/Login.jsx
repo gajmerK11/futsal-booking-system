@@ -3,12 +3,15 @@ import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   // Declaring state variables
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginMessage, setLoginMessage] = useState("");
+
+  const navigate = useNavigate();
 
   // 'Submit' handler function
   async function handleSubmit(e) {
@@ -25,6 +28,7 @@ function Login() {
 
     if (response.ok) {
       setLoginMessage(data.message);
+      navigate("/dashboard");
     } else {
       setLoginMessage("Something went wrong");
     }
