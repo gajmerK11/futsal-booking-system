@@ -28,7 +28,7 @@ function Login() {
 
     if (response.ok) {
       setLoginMessage(data.message);
-      navigate("/dashboard");
+      navigate("/dashboard", { state: { username: data.username } });
     } else {
       setLoginMessage("Something went wrong");
     }
