@@ -94,7 +94,7 @@ async function login(req, res) {
       { expiresIn: "1h" },
     );
 
-    // sending token to frontend as a response and also when everything is correct i.e. when user inputted email and password is correct, we send these things from backend
+    // sending token to frontend as a response and also when everything is correct i.e. when user provided email and password is correct, we send these things from backend
     return res.status(200).json({
       message: "Login successful",
       token, // similar to writing 'token: token' - instead of this, used something called 'object shorthand' of js

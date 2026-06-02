@@ -1,9 +1,8 @@
 import leftSideImage from "../assets/sign-in.jpg";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 function Login() {
   // Declaring state variables
@@ -29,7 +28,12 @@ function Login() {
     if (response.ok) {
       setLoginMessage(data.message);
       // 'useNavigate' allows you to pass data along with navigation using a second argument called 'state'
-      navigate("/dashboard", { state: { username: data.username } });
+      navigate("/dashboard", {
+        state: {
+          username: data.username,
+          from: "login",
+        },
+      });
     } else {
       setLoginMessage("Something went wrong");
     }
