@@ -28,6 +28,7 @@ function Login() {
 
     if (response.ok) {
       setLoginMessage(data.message);
+      // 'useNavigate' allows you to pass data along with navigation using a second argument called 'state'
       navigate("/dashboard", { state: { username: data.username } });
     } else {
       setLoginMessage("Something went wrong");
