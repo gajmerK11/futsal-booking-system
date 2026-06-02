@@ -7,6 +7,14 @@ const app = express();
 
 // importing 'cors'
 const cors = require("cors");
+// cors configuration object for allowing cookies to be sent for cross-origin requests
+const corsOptions = {
+  origin: "http://localhost:5173",
+  credentials: true,
+};
+
+// importing 'cookie parser'
+const cookieParser = require("cookie-parser");
 
 // importing 'pool' which is exported from the file 'db.js'
 // './' tells nodejs "look for local file, not a package"
@@ -14,7 +22,8 @@ const pool = require("./models/db.js");
 
 // middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
+app.use(cookieParser());
 
 // routes
 const authRoutes = require("./routes/auth.js");

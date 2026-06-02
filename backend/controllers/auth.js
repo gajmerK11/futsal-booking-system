@@ -87,17 +87,33 @@ async function login(req, res) {
     }
     // ------------------------------------------------
 
-    // generating jwt token ('jwt.sign()' is the method that both generates and signs the token in one step)
-    const token = jwt.sign(
+    // generating access token which is a jwt token ('jwt.sign()' is the method that both generates and signs the token in one step)
+    const accessToken = jwt.sign(
       { id: user.user_id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: "15m" },
+    );
+    // generating refresh token
+    const refreshToken = jwt.sign(
+      { id: user.user_id, role: user.role },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: "7d" },
     );
 
+    // sets cookie in response headers
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false, // for development only
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    // sends response
+    // i.e.
     // sending token to frontend as a response and also when everything is correct i.e. when user provided email and password is correct, we send these things from backend
     return res.status(200).json({
       message: "Login successful",
-      token, // similar to writing 'token: token' - instead of this, used something called 'object shorthand' of js
+      accessToken, // similar to writing 'accessToken: accessToken' - instead of this, used something called 'object shorthand' of js (this way of writing is used if both key and value have same name)
       username: user.username,
     });
   } catch (error) {
