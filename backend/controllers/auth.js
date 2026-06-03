@@ -100,12 +100,12 @@ async function login(req, res) {
       { expiresIn: "7d" },
     );
 
-    // sets cookie in response headers
+    // sets cookie in response headers (to put it simply, we are sending refreshToken as httpOnly cookie as a response)
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false, // for development only
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true, // JS cannot read this cookie (XSS protection)
+      secure: false, // for development only (true in production (HTTPS only))
+      sameSite: "strict", // blocks cross-site requests (CSRF protection)
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
     });
 
     // sends response
