@@ -2,13 +2,17 @@ import leftSideImage from "../assets/sign-in.jpg";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 function Login() {
   // Declaring state variables
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginMessage, setLoginMessage] = useState("");
+
+  // Declaring context variable
+  const { setAccessToken } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -26,6 +30,8 @@ function Login() {
     const data = await response.json();
 
     if (response.ok) {
+      // stores accessToken in react context variable in frontend so that it can be sent in the future requests to access protected routes
+      setAccessToken(data.accessToken);
       setLoginMessage(data.message);
       // 'useNavigate' allows you to pass data along with navigation using a second argument called 'state'
       navigate("/dashboard", {
