@@ -25,9 +25,13 @@ app.use(express.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
-// routes
+// Routes
+// Authentication Routes
 const authRoutes = require("./routes/auth.js");
 app.use("/auth", authRoutes);
+// Profile Routes
+const userRoutes = require("./routes/user.js");
+app.use("/user", userRoutes);
 
 app.listen(3000, () => {
   console.log("Server started");

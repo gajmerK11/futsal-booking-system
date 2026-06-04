@@ -7,6 +7,7 @@ type: project
 # Futsal Booking System — Project Context
 
 ## Project Overview
+
 - **Goal:** Master backend development. Proof-of-work for backend role switch at current company.
 - **Deadline:** ~June 19, 2026 (2 months from April 19, 2026)
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
@@ -16,6 +17,7 @@ type: project
 ---
 
 ## Mentor Role (CRITICAL — always follow)
+
 - **Socratic method** — never give code unless user explicitly asks. Ask questions that lead user to solutions.
 - Guide user to read exact doc sections rather than explaining everything — build doc-reading habit.
 - **Code quality standards — always enforce, never skip:**
@@ -29,6 +31,7 @@ type: project
 ---
 
 ## Learner Profile
+
 - Location: Kathmandu, Nepal
 - Calls mentor "brother" at moments of progress
 - Sometimes asks for shortcuts — redirect, don't comply
@@ -43,26 +46,29 @@ type: project
 ---
 
 ## Database Schema (5 tables)
+
 ```sql
-Users: user_id (PK SERIAL), username (VARCHAR NOT NULL), email (VARCHAR UNIQUE NOT NULL), 
+Users: user_id (PK SERIAL), username (VARCHAR NOT NULL), email (VARCHAR UNIQUE NOT NULL),
        password (VARCHAR hashed NOT NULL), phone_number (VARCHAR), role ('user'|'owner')
 
 Futsal Venues: futsal_id (PK), futsal_name, location, phone_number, owner_id (FK→Users)
 
-Grounds: ground_id (PK), futsal_id (FK→Venues), ground_name, price (DECIMAL), 
+Grounds: ground_id (PK), futsal_id (FK→Venues), ground_name, price (DECIMAL),
          has_parking, has_shower, has_changing_room (BOOLEAN)
 
-Time Slots: slot_id (PK), ground_id (FK→Grounds), start_time (TIME), end_time (TIME), 
+Time Slots: slot_id (PK), ground_id (FK→Grounds), start_time (TIME), end_time (TIME),
             status ('available'|'pending'|'approved'|'cancelled')
 
-Bookings: booking_id (PK), user_id (FK→Users), slot_id (FK→TimeSlots), 
+Bookings: booking_id (PK), user_id (FK→Users), slot_id (FK→TimeSlots),
           booking_date (DATE), notes (TEXT optional), status ('pending'|'approved'|'cancelled')
 ```
+
 **Note:** Only `users` table created in PostgreSQL so far. Remaining 4 tables pending — `backend/sql/schema.sql` has users table, needs other 4.
 
 ---
 
 ## Project Structure
+
 ```
 futsal-booking-system/
 ├── backend/
@@ -99,16 +105,19 @@ futsal-booking-system/
 ## Backend — Current State
 
 ### Packages installed (backend/)
+
 - **Production:** express, cors, dotenv, pg, bcrypt, jsonwebtoken, cookie-parser
 - **Dev:** nodemon
 
 ### index.js
+
 - Express server on port 3000
 - Middleware: `express.json()`, `cors()`, `require("dotenv").config()`
 - Routes: `authRoutes` mounted at `/auth`
 - `testDBConnection()` — confirmed working
 
 ### controllers/auth.js
+
 ```
 register:
   - Extract: username, email, password, phone_number, role from req.body
@@ -128,10 +137,12 @@ login:
 ```
 
 ### routes/auth.js
+
 - `POST /register` → register controller
 - `POST /login` → login controller
 
 ### .env variables
+
 - DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 - JWT_SECRET (generated with crypto.randomBytes(64).toString('hex'))
 
@@ -140,15 +151,18 @@ login:
 ## Frontend — Current State
 
 ### Packages installed (frontend/)
+
 - react, react-dom, react-router-dom, react-icons, tailwindcss, @tailwindcss/vite, jwt-decode
 
 ### Routing (App.jsx)
+
 - `/login` → Login component
 - `/register` → Register component
 - `/dashboard` → Dashboard component
 - `*` → Navigate to /login
 
 ### Login.jsx — COMPLETE ✅
+
 - Split card layout: image left (sign-in.jpg), form right
 - Background: `bg-stone-100`
 - OAuth buttons (Google/Apple) with "Coming Soon" tooltip — `cursor-not-allowed`
@@ -160,17 +174,20 @@ login:
 - Responsive: `flex-col md:flex-row`, `w-full md:w-1/2`
 
 ### Register.jsx — COMPLETE ✅
+
 - Same layout as Login (register.jpg on left)
 - Fields: username, email, password, phone_number, role (select dropdown)
 - State: one useState per field + registerMessage
 - handleSubmit: fetch POST /auth/register → on success: navigate('/dashboard', { state: { username: data.user.username, from: 'register' } })
 
 ### Dashboard.jsx — BASIC
+
 - useLocation to get `{ username, from }` from navigate state
 - Shows "Hello {username}" if from login, "Welcome onboard {username}" if from register
 - Needs: proper auth protection, real content, token handling
 
 ### index.css — Custom CSS classes
+
 ```css
 .input-animated — position: relative wrapper for focus border animation
 .input-animated::after — animated bottom border (width 0 → 100% on focus-within)
@@ -184,6 +201,7 @@ login:
 ## Auth — What's Done vs What's Needed
 
 ### ✅ Done
+
 - Register endpoint tested (201, 409, 400 cases)
 - Login endpoint tested (200+token, 401 cases)
 - Frontend forms connected to backend APIs
@@ -191,7 +209,9 @@ login:
 - Basic dashboard showing username
 
 ### ❌ NOT YET DONE — Next Priority
+
 Industry-standard auth refactor:
+
 1. Wire up `cookie-parser` in `backend/index.js`
 2. Update login controller:
    - Issue **access token** (15min) — returned in JSON response
@@ -206,6 +226,7 @@ Industry-standard auth refactor:
 ---
 
 ## Weekly Plan (June 2026 — Week 1)
+
 - [ ] Auth refactor — httpOnly cookies + refresh token ← NEXT
 - [ ] Complete schema.sql — 4 remaining tables
 - [ ] User dashboard (real content)
@@ -215,6 +236,7 @@ Industry-standard auth refactor:
 ---
 
 ## Memory Update Protocol
+
 - User says "update project_context.md" at end of each session
 - Claude REWRITES the "Current State" sections — never appends duplicates
 - **Usage limit reminder:** Two prompts before limit is hit, remind user to update the file
@@ -222,6 +244,7 @@ Industry-standard auth refactor:
 ---
 
 ## Key Decisions Made
+
 - Raw SQL via `pg` (not Sequelize) — to genuinely learn SQL
 - PostgreSQL — company uses it
 - httpOnly cookie for token storage (not localStorage) — more secure, industry standard

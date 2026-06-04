@@ -12,6 +12,7 @@ function Login() {
   const [loginMessage, setLoginMessage] = useState("");
 
   // Declaring context variable
+  // It gets 'setAccessToken' from auth context to store token after Login
   const { setAccessToken } = useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ function Login() {
     const data = await response.json();
 
     if (response.ok) {
-      // stores accessToken in react context variable in frontend so that it can be sent in the future requests to access protected routes
+      // stores accessToken in react context variable (i.e. in AuthContext) in frontend so that it can be sent in the future requests to access protected routes
       setAccessToken(data.accessToken);
       setLoginMessage(data.message);
       // 'useNavigate' allows you to pass data along with navigation using a second argument called 'state'
