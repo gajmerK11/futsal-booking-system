@@ -28,6 +28,7 @@ function Login() {
       body: JSON.stringify({ email, password }),
     });
 
+    // Parsing/Converting response (converting json to js object)
     const data = await response.json();
 
     if (response.ok) {
