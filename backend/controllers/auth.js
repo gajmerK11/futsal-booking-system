@@ -55,6 +55,7 @@ async function register(req, res) {
   }
 }
 
+// This function is for the logic of '/login' route
 async function login(req, res) {
   try {
     // extracting from request body
@@ -122,4 +123,9 @@ async function login(req, res) {
   }
 }
 
-module.exports = { register, login };
+// refreshToken function
+function refresh(req, res) {
+  console.log("This generates new access token");
+}
+
+module.exports = { register, login, refresh };

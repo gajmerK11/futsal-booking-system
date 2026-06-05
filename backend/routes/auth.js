@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
 // Importing 'register' and 'login' controllers
-const { register, login } = require("../controllers/auth.js");
+const { register, login, refresh } = require("../controllers/auth.js");
 
-// wiring up register and login routes with their respective controllers
+// wiring up register, login, refresh routes with their respective controllers
 router.post("/register", register);
 router.post("/login", login);
+router.post("/refresh", refresh);
 
 module.exports = router;
