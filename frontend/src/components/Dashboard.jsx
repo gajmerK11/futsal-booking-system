@@ -1,6 +1,8 @@
 import { useLocation } from "react-router-dom";
 import { useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
+// temporarily importing sidebar component to see it
+import Sidebar from "./layout/Sidebar";
 
 function Dashboard() {
   const location = useLocation();
@@ -57,7 +59,8 @@ function Dashboard() {
     fetchProfile();
   }, []);
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div>
+      <Sidebar />
       <h1 className="text-3xl">{message}</h1>
     </div>
   );
