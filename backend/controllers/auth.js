@@ -101,7 +101,7 @@ async function login(req, res) {
       { expiresIn: "7d" },
     );
 
-    // sets cookie in response headers (to put it simply, we are sending refreshToken as httpOnly cookie as a response)
+    // sets cookie in response headers or we can even say creates cookie (to put it simply, we are sending refreshToken as httpOnly cookie as a response)
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true, // JS cannot read this cookie (XSS protection)
       secure: false, // for development only (true in production (HTTPS only))
@@ -125,7 +125,33 @@ async function login(req, res) {
 
 // refreshToken function
 function refresh(req, res) {
-  console.log("This generates new access token");
+  // Step-1: reading refreshToken from cookie
+  const refreshToken = req.cookies.refreshToken;
+  // This is for 'what if no cookies exist - browser never logged in, cookie expired, cleared?'. So - if no cookie (no cookie means no refreshToken), return 401
+  if (!refreshToken) {
+    return res.status(401).json({ message: "No cookie found." });
+  }
+
+  try {
+    // Step-2: verify the token
+    const verifiedToken = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+    );
+    // Step-3: sign new access token (create new access token)
+    const newAccessToken = jwt.sign(
+      { id: verifiedToken.id, role: verifiedToken.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" },
+    );
+    // Step-4: send new access token in response/json response
+    return res.status(200).json({
+      newAccessToken,
+    });
+  } catch (error) {
+    // If refresh token is invalid or expired, 'jwt.verfiy()' throws an error - catch block handles it and sends back 403
+    return res.status(403).json({ message: "Invalid or expired token." });
+  }
 }
 
 module.exports = { register, login, refresh };
