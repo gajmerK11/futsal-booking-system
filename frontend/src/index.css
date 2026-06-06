@@ -3,6 +3,32 @@
 /* v4 tailwind requires no import base/components/utilities */
 @import "tailwindcss";
 
+/* Mapping custom classes styles */
+@theme {
+  --color-primary: #4648d4;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #6063ee;
+  --color-inverse-surface: #303038;
+  --color-surface: #fcf8ff;
+  --color-surface-dim: #dbd8e4;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f5f2fe;
+  --color-surface-container: #efecf8;
+  --color-surface-container-high: #e9e6f3;
+  --color-on-surface: #1b1b23;
+  --color-on-surface-variant: #464554;
+  --color-outline: #767586;
+  --color-outline-variant: #c7c4d7;
+  --color-primary-fixed: #e1e0ff;
+  --font-size-display-lg: 48px;
+  --font-size-display-lg-mobile: 32px;
+  --font-size-headline-md: 24px;
+  --font-size-headline-section: 14px;
+  --font-size-body-lg: 18px;
+  --font-size-body-md: 16px;
+  --font-size-label-sm: 12px;
+}
+
 * {
   font-family: "Inter", sans-serif;
 }
