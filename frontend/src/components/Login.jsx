@@ -25,9 +25,9 @@ function Login() {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
-
     // Parsing/Converting response (converting json to js object)
     const data = await response.json();
 

@@ -69,7 +69,7 @@ async function login(req, res) {
 
     // checking user typed email exists in the db or not
     // ------------------------------------------------
-    const result = await pool.query("SELECT * FROM users where email = $1", [
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
 
@@ -101,7 +101,9 @@ async function login(req, res) {
       { expiresIn: "7d" },
     );
 
-    // sets cookie in response headers or we can even say creates cookie (to put it simply, we are sending refreshToken as httpOnly cookie as a response)
+    // sets cookie in response headers
+    // here we don't do 'return' because it doesn't send the reponse - it just adds the cookie to the response headers
+    // the actual response is sent by line after this block
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true, // JS cannot read this cookie (XSS protection)
       secure: false, // for development only (true in production (HTTPS only))
