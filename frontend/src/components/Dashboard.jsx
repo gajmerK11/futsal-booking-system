@@ -1,8 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
-// temporarily importing sidebar component to see it
-import Sidebar from "./layout/Sidebar";
+import DashboardLayout from "./layout/DashboardLayout";
 
 function Dashboard() {
   const location = useLocation();
@@ -59,10 +58,14 @@ function Dashboard() {
     fetchProfile();
   }, []);
   return (
-    <div>
-      <Sidebar />
-      <h1 className="text-3xl">{message}</h1>
-    </div>
+    <DashboardLayout>
+      <main className="p-8">
+        <section>
+          <h1>{message}</h1>
+          <p>tagline here</p>
+        </section>
+      </main>
+    </DashboardLayout>
   );
 }
 export default Dashboard;

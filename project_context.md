@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-06:** Auth 100% complete. Now building Dashboard UI.
+- **Status as of 2026-06-06:** Auth 100% complete. Dashboard layout shell complete — Sidebar ✅, DashboardHeader ✅, DashboardLayout ✅. Now building Dashboard main content.
 
 ---
 
@@ -89,12 +89,12 @@ futsal-booking-system/
 │   │   ├── assets/        ← sign-in.jpg, register.jpg
 │   │   ├── components/
 │   │   │   ├── layout/
-│   │   │   │   ├── Sidebar.jsx         ← complete ✅ (brand, nav links, logout)
-│   │   │   │   ├── DashboardHeader.jsx ← empty, not yet written
-│   │   │   │   └── DashboardLayout.jsx ← empty, not yet written
+│   │   │   │   ├── Sidebar.jsx         ← complete ✅
+│   │   │   │   ├── DashboardHeader.jsx ← complete ✅ (search bar + username/avatar)
+│   │   │   │   └── DashboardLayout.jsx ← complete ✅ (Sidebar + Header + children)
 │   │   │   ├── Login.jsx     ← complete ✅
 │   │   │   ├── Register.jsx  ← complete ✅
-│   │   │   └── Dashboard.jsx ← in progress (Sidebar temporarily imported for preview)
+│   │   │   └── Dashboard.jsx ← in progress (layout done, main content pending)
 │   │   ├── context/
 │   │   │   └── AuthContext.jsx ← createContext + AuthProvider + useState(accessToken) ✅
 │   │   ├── App.jsx          ← Routes: /login, /register, /dashboard, * → /login
@@ -205,32 +205,33 @@ refresh:
 - `setAccessToken(data.accessToken)` after login success
 - navigate('/dashboard', { state: { username, from: 'login' } })
 
+### Sidebar.jsx ✅ COMPLETE
+
+- Fixed sidebar: w-64, bg-[#f5f5f4], full height, border-r border-outline-variant
+- Brand: "FUTSALBOOK" — font-extrabold, uppercase, tracking-tighter
+- Nav: Dashboard (active — text-primary + bg-primary-fixed + filled icon), Venues, Bookings, Profile
+- Inactive links: text-on-surface-variant + hover:text-primary + hover:bg-surface-container (all 3)
+- Logout button: pill, dark→indigo hover, flex centered, logout icon + text-xs tracking-widest
+
+### DashboardHeader.jsx ✅ COMPLETE
+
+- `sticky top-0 bg-surface-container-lowest border-b border-outline-variant px-6 py-4`
+- Left: search bar — `relative` wrapper, Material Symbols search icon (absolute positioned), input `w-96 rounded-full bg-white border pl-10`
+- Right: username span + avatar circle (`w-9 h-9 rounded-full bg-inverse-surface` with initials "AM")
+- Hardcoded "ALEX MORGAN" — will be dynamic later
+
+### DashboardLayout.jsx ✅ COMPLETE
+
+- Imports Sidebar + DashboardHeader
+- Returns: `<div>` → `<Sidebar />` + `<div className="pl-64">` → `<DashboardHeader />` + `{children}`
+- `pl-64` offsets content from fixed sidebar
+
 ### Dashboard.jsx — IN PROGRESS
 
 - Has auto-refresh logic: 401 → POST /auth/refresh → retry ✅
-- Currently: Sidebar temporarily imported for preview
-- Needs: full UI rebuild using DashboardLayout
-
-### Sidebar.jsx ✅ (nearly complete)
-
-- Fixed sidebar: w-64, bg-[#f5f5f4], full height
-- Brand: "FUTSALBOOK" — font-extrabold, uppercase, tracking-tighter
-- Nav: Dashboard (active — text-primary + bg-primary-fixed + filled icon), Venues, Bookings, Profile
-- Inactive links: text-on-surface-variant + hover:text-primary + hover:bg-surface-container
-- Logout button: pill, dark→indigo hover, flex centered, logout icon + text
-
-**Two pending fixes in Sidebar.jsx:**
-
-1. `hover:bg-surface-container` missing on Bookings + Profile links
-2. Logout button: `text-sm` → `text-xs tracking-widest font-bold`
-
-### DashboardHeader.jsx — NOT STARTED
-
-- Needs: sticky top header, search bar (center), username display (right)
-
-### DashboardLayout.jsx — NOT STARTED
-
-- Needs: import Sidebar + DashboardHeader, render `{children}` in main content area
+- Now uses `<DashboardLayout>` wrapper ✅ (Sidebar import removed)
+- Currently renders placeholder `<h1>Hello testuser</h1>` inside layout
+- **Next:** replace placeholder with hero section + venue cards + bookings table
 
 ---
 
@@ -255,13 +256,11 @@ refresh:
 
 ## Immediately Next
 
-1. Fix 2 pending Sidebar.jsx issues
-2. Build `DashboardHeader.jsx` (search bar + username)
-3. Build `DashboardLayout.jsx` (Sidebar + Header + children)
-4. Refactor `Dashboard.jsx` to use DashboardLayout
-5. Build hero section, venue cards (static data), bookings table (static data)
-6. Create remaining 4 DB tables via psql: futsal_venues, grounds, time_slots, bookings
-7. Wire venue cards + bookings table to real DB data
+1. Build hero section in Dashboard.jsx — `Hello, {username}` (text-display-lg font-extrabold) + tagline `Find a court. Book a slot. Play.`
+2. Build venue cards section (3 static cards — name, location, phone, "VIEW GROUNDS" button)
+3. Build bookings table (static rows — venue, ground, date, time slot, status badge)
+4. Create remaining 4 DB tables via psql: futsal_venues, grounds, time_slots, bookings
+5. Wire venue cards + bookings table to real DB data
 
 ---
 
