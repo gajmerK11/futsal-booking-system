@@ -72,14 +72,46 @@ Bookings: booking_id (PK), user_id (FK→Users), slot_id (FK→TimeSlots),
 **Decision:** Use real coordinates + distance radius (geocoding), NOT area-hierarchy dropdowns. Matches Stitch design which shows literal distances ("2.4 miles" → will convert to **km** per user request — Nepal uses km).
 
 **Build plan (4 steps, in order):**
-1. **Schema:** add `latitude`, `longitude` (DECIMAL) columns to `users` AND `futsal_venues` tables
+1. **Schema:** add `latitude`, `longitude` (DECIMAL(10,6)) columns to `users` AND `futsal_venues` tables — ✅ schema.sql written, DB run PENDING (tomorrow morning)
 2. **Geocoding:** backend calls free geocoding API (OpenStreetMap Nominatim, no key needed) to convert place-name text → `{ lat, lon }` — happens once at registration (user) / venue-creation (owner), store numeric coords in DB
 3. **Distance formula:** Haversine formula in raw SQL — computes real-world km distance between two lat/lng pairs (no PostGIS extension needed)
 4. **Query:** `SELECT *, (haversine expr) AS distance_km FROM futsal_venues WHERE distance_km <= X ORDER BY distance_km` — feeds "VENUES NEAR YOU" cards directly with sorted results + display distance
 
 **Also needed:** Register form for 'user' role gets new `location` text field (geocoded on submit). Owner dashboard (new — not built yet) lets owner add futsal details (image, location, contact) → POST creates venue with geocoded coords.
 
-**Status:** Plan agreed. About to start Step 1 (schema — add lat/lng columns). User staying on Sonnet 4.6 model (not Opus) for this work — well-documented patterns, no need for frontier reasoning.
+**Status (2026-06-07 evening):** Step 1 schema DESIGNED & WRITTEN to `schema.sql` — both blocks ready:
+```sql
+CREATE TABLE IF NOT EXISTS users (
+    user_id SERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(100),
+    role VARCHAR(100),
+    location VARCHAR(100),
+    latitude DECIMAL(10,6),
+    longitude DECIMAL(10,6)
+);
+
+CREATE TABLE IF NOT EXISTS futsal_venues (
+    futsal_id SERIAL PRIMARY KEY,
+    futsal_name VARCHAR(100) NOT NULL,
+    location VARCHAR(100),
+    phone_number VARCHAR(100),
+    owner_id INTEGER REFERENCES users(user_id),
+    latitude DECIMAL(10,6),
+    longitude DECIMAL(10,6)
+);
+```
+**PENDING (tomorrow morning):** run against live local DB —
+1. `ALTER TABLE users ADD COLUMN location VARCHAR(100), ADD COLUMN latitude DECIMAL(10,6), ADD COLUMN longitude DECIMAL(10,6);` (existing table — non-destructive ALTER chosen over drop/recreate to preserve data)
+2. Run `CREATE TABLE futsal_venues (...)` block (new table)
+
+Decisions made along the way: DECIMAL(10,6) chosen for lat/lng (9 digits needed for `-180.123456`, +1 spare digit buffer); single `users` table with `role` column kept (not split into separate `owners` table — avoids duplicate auth/JWT logic, owner IS a user); `owner_id INTEGER REFERENCES users(user_id)` — plain INTEGER (not SERIAL, since it borrows existing user_id values, doesn't generate its own).
+
+User staying on Sonnet 4.6 model (not Opus) for this work — well-documented patterns, no need for frontier reasoning.
+
+**Next when resumed:** run the ALTER + CREATE TABLE statements against local DB, confirm clean execution, then move to Step 2 (geocoding — Nominatim API integration).
 
 ---
 
