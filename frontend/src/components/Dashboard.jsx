@@ -7,7 +7,7 @@ function Dashboard() {
   const location = useLocation();
   const { username, from } = location.state;
   const message =
-    from === "login" ? `Hello ${username}` : `Welcome onboard ${username}`;
+    from === "login" ? `Hello, ${username}` : `Welcome onboard ${username}`;
   // Grabbing 'accessToken' and 'setAccessToken' from context
   const { accessToken, setAccessToken } = useContext(AuthContext);
 
@@ -59,10 +59,14 @@ function Dashboard() {
   }, []);
   return (
     <DashboardLayout>
-      <main className="p-8">
+      <main className="p-8 max-w-7xl mx-auto">
         <section>
-          <h1>{message}</h1>
-          <p>tagline here</p>
+          <h1 className="text-display-lg font-extrabold tracking-tight text-on-surface">
+            {message}
+          </h1>
+          <p className="text-body-lg text-on-surface-variant font-medium">
+            Find a court. Book a slot. Play.
+          </p>
         </section>
       </main>
     </DashboardLayout>

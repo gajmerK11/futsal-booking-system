@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-06:** Auth 100% complete. Dashboard layout shell complete — Sidebar ✅, DashboardHeader ✅, DashboardLayout ✅. Now building Dashboard main content.
+- **Status as of 2026-06-07:** Auth 100% complete. Dashboard layout shell complete — Sidebar ✅, DashboardHeader ✅, DashboardLayout ✅. Hero section in Dashboard.jsx ✅ COMPLETE. Pivoted to backend work — building location-based "venues near you" feature (geocoding + distance search) before continuing static frontend cards.
 
 ---
 
@@ -41,13 +41,15 @@ type: project
 
 ---
 
-## Database Schema (5 tables)
+## Database Schema (5 tables — + lat/lng additions pending)
 
 ```sql
 Users: user_id (PK SERIAL), username (VARCHAR NOT NULL), email (VARCHAR UNIQUE NOT NULL),
        password (VARCHAR hashed NOT NULL), phone_number (VARCHAR), role ('user'|'owner')
+       + PENDING: latitude (DECIMAL), longitude (DECIMAL) — for location-based venue search
 
 Futsal Venues: futsal_id (PK), futsal_name, location, phone_number, owner_id (FK→Users)
+       + PENDING: latitude (DECIMAL), longitude (DECIMAL)
 
 Grounds: ground_id (PK), futsal_id (FK→Venues), ground_name, price (DECIMAL),
          has_parking, has_shower, has_changing_room (BOOLEAN)
@@ -60,6 +62,24 @@ Bookings: booking_id (PK), user_id (FK→Users), slot_id (FK→TimeSlots),
 ```
 
 **Note:** Only `users` table created in PostgreSQL. Remaining 4 tables pending.
+
+---
+
+## NEW FEATURE — Location-Based Venue Search (Option C chosen — 2026-06-07)
+
+**Problem:** "Venues near you" must handle cases like user typing "Swayambhu" but owner's futsal location is "Halchowk" (a sub-area within Swayambhu) — exact string match fails.
+
+**Decision:** Use real coordinates + distance radius (geocoding), NOT area-hierarchy dropdowns. Matches Stitch design which shows literal distances ("2.4 miles" → will convert to **km** per user request — Nepal uses km).
+
+**Build plan (4 steps, in order):**
+1. **Schema:** add `latitude`, `longitude` (DECIMAL) columns to `users` AND `futsal_venues` tables
+2. **Geocoding:** backend calls free geocoding API (OpenStreetMap Nominatim, no key needed) to convert place-name text → `{ lat, lon }` — happens once at registration (user) / venue-creation (owner), store numeric coords in DB
+3. **Distance formula:** Haversine formula in raw SQL — computes real-world km distance between two lat/lng pairs (no PostGIS extension needed)
+4. **Query:** `SELECT *, (haversine expr) AS distance_km FROM futsal_venues WHERE distance_km <= X ORDER BY distance_km` — feeds "VENUES NEAR YOU" cards directly with sorted results + display distance
+
+**Also needed:** Register form for 'user' role gets new `location` text field (geocoded on submit). Owner dashboard (new — not built yet) lets owner add futsal details (image, location, contact) → POST creates venue with geocoded coords.
+
+**Status:** Plan agreed. About to start Step 1 (schema — add lat/lng columns). User staying on Sonnet 4.6 model (not Opus) for this work — well-documented patterns, no need for frontier reasoning.
 
 ---
 
@@ -188,8 +208,10 @@ refresh:
   --color-on-surface-variant: #464554 --color-surface-container: #efecf8
   --color-surface-container-low: #f5f2fe --color-outline-variant: #c7c4d7
   --color-primary-fixed: #e1e0ff --color-inverse-surface: #303038 /* + others */
-  /* Custom font-size tokens */ --font-size-display-lg: 48px
-  --font-size-headline-md: 24px --font-size-headline-section: 14px
+  /* Font-size tokens — MUST use --text-* prefix (not --font-size-*) for Tailwind v4
+     to auto-generate text-{name} utility classes. Renamed after debugging session: */
+  --text-display-lg: 48px --text-headline-md: 24px --text-headline-section: 14px
+  --text-body-lg: 18px --text-body-md: 16px --text-label-sm: 12px
   /* + others */;
 ```
 
@@ -223,15 +245,25 @@ refresh:
 ### DashboardLayout.jsx ✅ COMPLETE
 
 - Imports Sidebar + DashboardHeader
-- Returns: `<div>` → `<Sidebar />` + `<div className="pl-64">` → `<DashboardHeader />` + `{children}`
+- Returns: `<div>` → `<Sidebar />` + `<div className="pl-64 bg-surface min-h-screen">` → `<DashboardHeader />` + `{children}`
 - `pl-64` offsets content from fixed sidebar
+- `bg-surface min-h-screen` here (not on `<main>`) — wrapper spans full viewport height so background tint covers entire content area; header's own white bg sits on top
 
 ### Dashboard.jsx — IN PROGRESS
 
 - Has auto-refresh logic: 401 → POST /auth/refresh → retry ✅
-- Now uses `<DashboardLayout>` wrapper ✅ (Sidebar import removed)
-- Currently renders placeholder `<h1>Hello testuser</h1>` inside layout
-- **Next:** replace placeholder with hero section + venue cards + bookings table
+- Uses `<DashboardLayout>` wrapper ✅
+- **Hero section ✅ COMPLETE:**
+  ```jsx
+  <main className="p-8 max-w-7xl mx-auto">
+    <section>
+      <h1 className="text-display-lg font-extrabold tracking-tight text-on-surface">{message}</h1>
+      <p className="text-body-lg text-on-surface-variant font-medium">Find a court. Book a slot. Play.</p>
+    </section>
+  </main>
+  ```
+- `bg-surface` + `min-h-screen` moved to wrapper div in DashboardLayout.jsx (not `<main>`) — so tint covers full content area height, not just hero's intrinsic content height
+- **Next:** venue cards section + bookings table — PAUSED to build backend location-search feature first (see new section below)
 
 ---
 
@@ -256,11 +288,13 @@ refresh:
 
 ## Immediately Next
 
-1. Build hero section in Dashboard.jsx — `Hello, {username}` (text-display-lg font-extrabold) + tagline `Find a court. Book a slot. Play.`
-2. Build venue cards section (3 static cards — name, location, phone, "VIEW GROUNDS" button)
-3. Build bookings table (static rows — venue, ground, date, time slot, status badge)
-4. Create remaining 4 DB tables via psql: futsal_venues, grounds, time_slots, bookings
-5. Wire venue cards + bookings table to real DB data
+1. **Schema:** add `latitude`/`longitude` (DECIMAL) columns to `users` + create `futsal_venues` table (with lat/lng) — Step 1 of location-search feature
+2. Build geocoding integration (Nominatim API call → store coords on register/venue-create)
+3. Write Haversine distance formula in raw SQL
+4. Build GET /venues/nearby query + route + controller (returns sorted venues + distance_km)
+5. Add `location` field to user register form (role='user') + new Owner Dashboard (add futsal: image, location, contact)
+6. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
+7. Create remaining DB tables: grounds, time_slots, bookings
 
 ---
 

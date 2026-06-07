@@ -7,7 +7,7 @@ function DashboardLayout({ children }) {
     <div>
       <Sidebar />
       {/* Right side of sidebar */}
-      <div className="pl-64">
+      <div className="pl-64 bg-surface min-h-screen">
         <DashboardHeader />
         {children}
       </div>

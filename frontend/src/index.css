@@ -20,13 +20,13 @@
   --color-outline: #767586;
   --color-outline-variant: #c7c4d7;
   --color-primary-fixed: #e1e0ff;
-  --font-size-display-lg: 48px;
-  --font-size-display-lg-mobile: 32px;
-  --font-size-headline-md: 24px;
-  --font-size-headline-section: 14px;
-  --font-size-body-lg: 18px;
-  --font-size-body-md: 16px;
-  --font-size-label-sm: 12px;
+  --text-display-lg: 48px;
+  --text-display-lg-mobile: 32px;
+  --text-headline-md: 24px;
+  --text-headline-section: 14px;
+  --text-body-lg: 18px;
+  --text-body-md: 16px;
+  --text-label-sm: 12px;
 }
 
 * {
