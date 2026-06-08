@@ -89,10 +89,16 @@ Decisions made so far:
 - **Why not Google Maps API:** requires billing/API key/credit card even on "free tier", costs money beyond quota — Nominatim (OpenStreetMap) is free/keyless/no-signup, good enough for Kathmandu-area venues on zero-budget deadline project
 - Explained "proxy" concept generally (A→B→C middleman pattern: hide details / add control / meet third-party requirements / bypass restrictions) — user will read & confirm understanding this evening
 
-**PENDING when resumed (evening):**
-1. Confirm "proxy" explanation clear
-2. Decide backend file structure for proxy endpoint — new `routes/location.js` + `controllers/location.js` vs tucking into existing `routes/auth.js` (question posed, awaiting user's answer + reasoning)
-3. Build `GET /location/search?q=<text>` proxy endpoint → forwards to Nominatim `https://nominatim.openstreetmap.org/search?q=<place>&format=json` → returns `{ lat, lon, display_name }` results to frontend
+**Status (2026-06-08 evening):**
+- ✅ Proxy explanation confirmed clear (recap given: User-Agent requirement, rate-limit control, CORS, centralization/swap-ability)
+- ✅ File structure decided: NEW `routes/location.js` + `controllers/location.js` (separation of concerns — location search is its own domain, not identity/auth)
+- ✅ Files created: `controllers/location.js`, `routes/location.js`
+- ✅ Mounted in `index.js`: `const locationRoutes = require("./routes/location.js"); app.use("/location", locationRoutes);` (mirrors authRoutes/userRoutes pattern)
+
+**PENDING when resumed:**
+1. Write `routes/location.js` body — express.Router(), `GET /search` → `searchLocation` controller, module.exports (same shape as `routes/auth.js`)
+2. Write `controllers/location.js` — `searchLocation(req, res)`: read `req.query.q`, fetch Nominatim `https://nominatim.openstreetmap.org/search?q=<q>&format=json` WITH custom User-Agent header, map response → `{ lat, lon, display_name }`, try/catch + status codes
+3. Test endpoint (Postman/browser): `GET /location/search?q=<place>`
 4. Wire frontend autocomplete UI (register form `location` field + future Owner Dashboard venue form) to call this endpoint, debounced, user selects suggestion → store lat/lon directly (autocomplete already returns coords, no extra geocode call needed at submit)
 
 After Step 2: Step 3 (Haversine SQL formula), Step 4 (`GET /venues/nearby` route).

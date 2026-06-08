@@ -32,6 +32,9 @@ app.use("/auth", authRoutes);
 // Profile Routes
 const userRoutes = require("./routes/user.js");
 app.use("/user", userRoutes);
+// Location routes
+const locationRoutes = require("./routes/location.js");
+app.use("/location", locationRoutes);
 
 app.listen(3000, () => {
   console.log("Server started");
