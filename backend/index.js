@@ -34,6 +34,7 @@ const userRoutes = require("./routes/user.js");
 app.use("/user", userRoutes);
 // Location routes
 const locationRoutes = require("./routes/location.js");
+// this appends '/location' at beginning of '/search' i.e. '/location/search
 app.use("/location", locationRoutes);
 
 app.listen(3000, () => {

@@ -72,6 +72,7 @@ Bookings: booking_id (PK), user_id (FK→Users), slot_id (FK→TimeSlots),
 **Decision:** Use real coordinates + distance radius (geocoding), NOT area-hierarchy dropdowns. Matches Stitch design which shows literal distances ("2.4 miles" → will convert to **km** per user request — Nepal uses km).
 
 **Build plan (4 steps, in order):**
+
 1. **Schema:** add `latitude`, `longitude` (DECIMAL(10,6)) columns to `users` AND `futsal_venues` tables — ✅ DONE & CONFIRMED in live DB (2026-06-08 morning, verified via `\d users` / `\d futsal_venues`)
 2. **Geocoding:** backend calls free geocoding API (OpenStreetMap Nominatim, no key needed) to convert place-name text → `{ lat, lon }` — happens once at registration (user) / venue-creation (owner), store numeric coords in DB
 3. **Distance formula:** Haversine formula in raw SQL — computes real-world km distance between two lat/lng pairs (no PostGIS extension needed)
@@ -84,24 +85,31 @@ Bookings: booking_id (PK), user_id (FK→Users), slot_id (FK→TimeSlots),
 **Now on Step 2 — Geocoding (in progress, Socratic discussion underway):**
 
 Decisions made so far:
+
 - **Autocomplete approach chosen** (not free-text, not static dropdown) — user picks place from live suggestion list as they type → avoids typo problem (e.g. "Swayambhu" vs "Soyambhu"), scalable (no manual area-list maintenance), suggestion already carries correct lat/lon attached (no separate geocode step needed at submit)
 - **Architecture: frontend → backend proxy → Nominatim** (not frontend calling Nominatim directly) — reasons user correctly identified: avoid rate-limit issues, satisfy Nominatim's required User-Agent header, avoid CORS problems, centralize third-party API logic in one place (easy to swap providers later)
 - **Why not Google Maps API:** requires billing/API key/credit card even on "free tier", costs money beyond quota — Nominatim (OpenStreetMap) is free/keyless/no-signup, good enough for Kathmandu-area venues on zero-budget deadline project
 - Explained "proxy" concept generally (A→B→C middleman pattern: hide details / add control / meet third-party requirements / bypass restrictions) — user will read & confirm understanding this evening
 
-**Status (2026-06-08 evening):**
+**Status (2026-06-09):**
+
 - ✅ Proxy explanation confirmed clear (recap given: User-Agent requirement, rate-limit control, CORS, centralization/swap-ability)
-- ✅ File structure decided: NEW `routes/location.js` + `controllers/location.js` (separation of concerns — location search is its own domain, not identity/auth)
-- ✅ Files created: `controllers/location.js`, `routes/location.js`
-- ✅ Mounted in `index.js`: `const locationRoutes = require("./routes/location.js"); app.use("/location", locationRoutes);` (mirrors authRoutes/userRoutes pattern)
+- ✅ File structure decided: NEW `routes/location.js` + `controllers/location.js` (separation of concerns)
+- ✅ Files created + mounted in `index.js`
+- ✅ `routes/location.js` written — express.Router(), `GET /search` → `searchLocation`, module.exports
+- ✅ `controllers/location.js` written — `searchLocation(req, res)`: validates `req.query.q` (400 if missing), fetches Nominatim with `User-Agent: FutsalBookingWebApp` header, maps → `{ lat, lon, display_name }`, try/catch (500 on error)
+- ✅ Final Nominatim URL: `https://nominatim.openstreetmap.org/search?q=${q}&format=json&countrycodes=np&accept-language=en`
+- ✅ Tested via Postman — `GET /location/search?q=Swayambhu` → 200 OK, Nepal-only results, English display_name confirmed
 
-**PENDING when resumed:**
-1. Write `routes/location.js` body — express.Router(), `GET /search` → `searchLocation` controller, module.exports (same shape as `routes/auth.js`)
-2. Write `controllers/location.js` — `searchLocation(req, res)`: read `req.query.q`, fetch Nominatim `https://nominatim.openstreetmap.org/search?q=<q>&format=json` WITH custom User-Agent header, map response → `{ lat, lon, display_name }`, try/catch + status codes
-3. Test endpoint (Postman/browser): `GET /location/search?q=<place>`
-4. Wire frontend autocomplete UI (register form `location` field + future Owner Dashboard venue form) to call this endpoint, debounced, user selects suggestion → store lat/lon directly (autocomplete already returns coords, no extra geocode call needed at submit)
+**Step 2 (Geocoding) — COMPLETE ✅**
 
-After Step 2: Step 3 (Haversine SQL formula), Step 4 (`GET /venues/nearby` route).
+**PENDING when resumed (tomorrow morning):**
+
+1. Wire frontend autocomplete — Register form gets `location` text input, calls `GET /location/search?q=<text>` as user types (debounced), shows dropdown of suggestions, user picks one → `lat`/`lon` stored (no extra geocode at submit needed — autocomplete result already carries coords)
+2. Step 3: Haversine SQL formula in raw SQL
+3. Step 4: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
+
+After Steps 3+4: Owner Dashboard (add venue with geocoded location), resume frontend venue cards wired to real nearby-venues data.
 
 User staying on Sonnet 4.6 model (not Opus) for this work — well-documented patterns, no need for frontier reasoning.
 
@@ -235,8 +243,7 @@ refresh:
   /* Font-size tokens — MUST use --text-* prefix (not --font-size-*) for Tailwind v4
      to auto-generate text-{name} utility classes. Renamed after debugging session: */
   --text-display-lg: 48px --text-headline-md: 24px --text-headline-section: 14px
-  --text-body-lg: 18px --text-body-md: 16px --text-label-sm: 12px
-  /* + others */;
+  --text-body-lg: 18px --text-body-md: 16px --text-label-sm: 12px /* + others */;
 ```
 
 ### AuthContext.jsx ✅
@@ -281,8 +288,12 @@ refresh:
   ```jsx
   <main className="p-8 max-w-7xl mx-auto">
     <section>
-      <h1 className="text-display-lg font-extrabold tracking-tight text-on-surface">{message}</h1>
-      <p className="text-body-lg text-on-surface-variant font-medium">Find a court. Book a slot. Play.</p>
+      <h1 className="text-display-lg font-extrabold tracking-tight text-on-surface">
+        {message}
+      </h1>
+      <p className="text-body-lg text-on-surface-variant font-medium">
+        Find a court. Book a slot. Play.
+      </p>
     </section>
   </main>
   ```
