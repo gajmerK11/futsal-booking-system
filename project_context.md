@@ -103,11 +103,20 @@ Decisions made so far:
 
 **Step 2 (Geocoding) — COMPLETE ✅**
 
-**PENDING when resumed (tomorrow morning):**
+**Step 3 (Frontend Autocomplete) — IN PROGRESS (2026-06-10):**
 
-1. Wire frontend autocomplete — Register form gets `location` text input, calls `GET /location/search?q=<text>` as user types (debounced), shows dropdown of suggestions, user picks one → `lat`/`lon` stored (no extra geocode at submit needed — autocomplete result already carries coords)
-2. Step 3: Haversine SQL formula in raw SQL
-3. Step 4: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
+Work done this session in `Register.jsx`:
+- ✅ 3 state variables added: `location` (string), `locationSuggestions` (array), `selectedLocation` (null)
+- ✅ `handleLocationInput(e)` — updates `location` state + fetches `GET /location/search?q=${e.target.value}` → stores result in `locationSuggestions`
+- ✅ `handleLocationSelect(place)` — sets `location` to `place.display_name`, stores full place in `selectedLocation`, clears `locationSuggestions`
+- ✅ Location `<input>` added in JSX (after phone number field), wired to `handleLocationInput`
+- 🔲 **RESUME HERE:** Add dropdown `<ul>` inside location field div — render when `locationSuggestions.length > 0`, map each suggestion to `<li>` calling `handleLocationSelect(place)` on click
+- 🔲 Update `handleSubmit` to include `lat`/`lon` in POST body (from `selectedLocation.lat` / `selectedLocation.lon`)
+- 🔲 Update backend `controllers/auth.js` `register` function to accept + store lat/lon in DB
+
+**PENDING after frontend autocomplete complete:**
+1. Step 3 (Haversine): write Haversine distance formula in raw SQL
+2. Step 4: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
 
 After Steps 3+4: Owner Dashboard (add venue with geocoded location), resume frontend venue cards wired to real nearby-venues data.
 

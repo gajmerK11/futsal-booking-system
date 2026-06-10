@@ -10,6 +10,7 @@ async function searchLocation(req, res) {
     if (!q) {
       return res.status(400).json({ message: "Search query is required" });
     }
+    // Calling the api
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${q}&format=json&countrycodes=np&accept-language=en`,
       {

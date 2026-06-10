@@ -11,7 +11,47 @@ function Register() {
   const [role, setRole] = useState("");
   const [registerMessage, setRegisterMessage] = useState("");
 
+  // state for location implementaion
+  // This one is for 'what user typed'
+  const [location, setLocation] = useState("");
+  /*
+  This one is for 'suggestions list from API'.
+  Since this one will hold array of places from API so its initial value should be an empty array. 
+  */
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  /**
+   * This one is for 'selected place from dropdown suggestions with coords'
+   * no place selected yet (at beginning) - that's why 'null' as it means 'nothing selected' (no " " - because it means empty string )
+   */
+  const [selectedLocation, setSelectedLocation] = useState(null);
+
   const navigate = useNavigate();
+
+  // 'Location input' handler function - This is for displaying location suggestion as user types
+  async function handleLocationInput(e) {
+    // Step-1: update location state - it means set the 'location' variable to 'e.target.value' which is the current input field value
+    setLocation(e.target.value);
+    // Step-2: call the API
+    const response = await fetch(
+      `http://localhost:3000/location/search?q=${e.target.value}`,
+      {
+        method: "GET",
+      },
+    );
+    const data = await response.json();
+    // Storing the 'data' in state so the dropdown can render it.
+    setLocationSuggestions(data);
+  }
+
+  // 'Location select' handler function - runs when user clicks a suggestion from dropdown ('place' will be passed by JSX that calls this function)
+  function handleLocationSelect(place) {
+    // Step-1: When user selects the place name from dropdown, update the input field value to that ('setLocation' is responsible for that so we are passing to it)
+    setLocation(place.display_name);
+    // Step-2: Store full place object with lat/lon
+    setSelectedLocation(place);
+    // Step-3: Clear drop-down
+    setLocationSuggestions([]);
+  }
 
   // 'Submit' handler function
   async function handleSubmit(e) {
@@ -56,6 +96,7 @@ function Register() {
           <p className="mt-2">Create an account</p>
           {/* Register form */}
           <form className="flex flex-col gap-4 mt-4" onSubmit={handleSubmit}>
+            {/* Username field */}
             <div className="input-animated">
               <input
                 type="text"
@@ -67,6 +108,7 @@ function Register() {
                 className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors"
               />
             </div>
+            {/* Email field */}
             <div className="input-animated">
               <input
                 type="email"
@@ -78,6 +120,7 @@ function Register() {
                 className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors"
               />
             </div>
+            {/* Password field */}
             <div className="input-animated">
               <input
                 type="password"
@@ -89,6 +132,7 @@ function Register() {
                 className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors"
               />
             </div>
+            {/* Phone Number field */}
             <div className="input-animated">
               <input
                 type="tel"
@@ -100,6 +144,18 @@ function Register() {
                 className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors"
               />
             </div>
+            {/* Location field */}
+            <div className="input-animated">
+              <input
+                type="text"
+                value={location}
+                onChange={handleLocationInput}
+                placeholder="Your address"
+                className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors "
+              />
+              {/* show dropdown only if suggestions exist i.e. 'data' array is not empty ('data' is what holds array of object containing lat/long/display_name) */}
+            </div>
+            {/* User role field */}
             <select
               className="w-full bg-gray-100 border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors pr-8"
               // Connecting state variables
