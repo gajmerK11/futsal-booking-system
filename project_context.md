@@ -20,6 +20,7 @@ type: project
 
 - **Socratic method** — never give code unless user explicitly asks. Ask questions that lead user to solutions.
 - **Deadline adjustment (2026-06-03):** Skip doc-reading detours, give just enough concept to implement, then build. No code handouts — explain concept, user writes code.
+- **Debugger-first (added 2026-06-10):** User wants to build debugging skills independently. Where relevant, guide user to use the VS Code/Cursor debugger instead of console.log. When a bug or unexpected value arises, guide user to set breakpoint + trigger code + inspect variable themselves — do NOT just give the answer. Ask "what does the debugger show at that line?" before diagnosing.
 - **Code quality standards — always enforce, never skip:**
   - Error handling (try/catch on all async operations)
   - Correct HTTP status codes
@@ -106,15 +107,18 @@ Decisions made so far:
 **Step 3 (Frontend Autocomplete) — IN PROGRESS (2026-06-10):**
 
 Work done this session in `Register.jsx`:
+
 - ✅ 3 state variables added: `location` (string), `locationSuggestions` (array), `selectedLocation` (null)
 - ✅ `handleLocationInput(e)` — updates `location` state + fetches `GET /location/search?q=${e.target.value}` → stores result in `locationSuggestions`
 - ✅ `handleLocationSelect(place)` — sets `location` to `place.display_name`, stores full place in `selectedLocation`, clears `locationSuggestions`
 - ✅ Location `<input>` added in JSX (after phone number field), wired to `handleLocationInput`
-- 🔲 **RESUME HERE:** Add dropdown `<ul>` inside location field div — render when `locationSuggestions.length > 0`, map each suggestion to `<li>` calling `handleLocationSelect(place)` on click
+- ✅ Dropdown `<ul>` written — `{locationSuggestions.length > 0 && <ul>...}`, `.map()` with `key={place.display_name}`, displays `place.display_name` per `<li>`
+- 🔲 **RESUME HERE:** Add `onClick` handler to `<li>` — `onClick={() => handleLocationSelect(place)}`
 - 🔲 Update `handleSubmit` to include `lat`/`lon` in POST body (from `selectedLocation.lat` / `selectedLocation.lon`)
 - 🔲 Update backend `controllers/auth.js` `register` function to accept + store lat/lon in DB
 
 **PENDING after frontend autocomplete complete:**
+
 1. Step 3 (Haversine): write Haversine distance formula in raw SQL
 2. Step 4: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
 
@@ -164,6 +168,8 @@ futsal-booking-system/
 │   │   └── App.css          ← empty
 │   ├── vite.config.js
 │   └── package.json
+├── .vscode/
+│   └── launch.json    ← Debugger config: Node.js backend, cwd=backend/, entry=index.js ✅
 ├── .gitignore
 └── project_context.md
 ```

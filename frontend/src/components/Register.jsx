@@ -153,7 +153,17 @@ function Register() {
                 placeholder="Your address"
                 className="w-full bg-gray-100 border border-gray-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors "
               />
-              {/* show dropdown only if suggestions exist i.e. 'data' array is not empty ('data' is what holds array of object containing lat/long/display_name) */}
+              {/* 
+              1. show dropdown only if suggestions exist i.e. if 'data' array is not empty ('data' is what holds array of object containing lat/long/display_name). Since 'data' is a local variable inside 'handleLocationInput' - it doesn't exist in JSX so we can't do something like 'data.length > 0'. JSX only sees state variables. Therefore, 'locationSuggestions' is the state variable that holds the suggestions array.
+              2. and yes, you might get confused what is this pattern? this is using condition in JSX i.e. if condition match, render this component.
+              */}
+              {locationSuggestions.length > 0 && (
+                <ul>
+                  {locationSuggestions.map((place) => (
+                    <li key={place.display_name}>{place.display_name}</li>
+                  ))}
+                </ul>
+              )}
             </div>
             {/* User role field */}
             <select
