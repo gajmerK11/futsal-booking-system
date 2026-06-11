@@ -61,7 +61,16 @@ function Register() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, email, password, phone_number, role }),
+      body: JSON.stringify({
+        username,
+        email,
+        password,
+        phone_number,
+        role,
+        location: selectedLocation?.display_name,
+        lat: selectedLocation?.lat,
+        lon: selectedLocation?.lon,
+      }),
     });
 
     const data = await response.json();
@@ -160,7 +169,12 @@ function Register() {
               {locationSuggestions.length > 0 && (
                 <ul>
                   {locationSuggestions.map((place) => (
-                    <li key={place.display_name}>{place.display_name}</li>
+                    <li
+                      key={place.display_name}
+                      onClick={() => handleLocationSelect(place)}
+                    >
+                      {place.display_name}
+                    </li>
                   ))}
                 </ul>
               )}

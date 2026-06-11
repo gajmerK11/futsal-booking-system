@@ -11,9 +11,21 @@ async function register(req, res) {
     const password = req.body.password;
     const phone_number = req.body.phone_number;
     const role = req.body.role;
+    const location = req.body.location;
+    const latitude = req.body.lat;
+    const longitude = req.body.lon;
 
     // validating input (input validation)
-    if (!username || !email || !password || !phone_number || !role) {
+    if (
+      !username ||
+      !email ||
+      !password ||
+      !phone_number ||
+      !role ||
+      !location ||
+      !latitude ||
+      !longitude
+    ) {
       return res.status(400).json({ message: "Invalid input" });
     }
 
@@ -39,8 +51,17 @@ async function register(req, res) {
 
     // saving in database
     const result = await pool.query(
-      `INSERT INTO users (username, email, password, phone_number, role) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, username, email, role`,
-      [username, email, hashedPassword, phone_number, role],
+      `INSERT INTO users (username, email, password, phone_number, role, location, latitude, longitude) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING user_id, username, email, role`,
+      [
+        username,
+        email,
+        hashedPassword,
+        phone_number,
+        role,
+        location,
+        latitude,
+        longitude,
+      ],
     );
 
     // returning response to frontend

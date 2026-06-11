@@ -104,25 +104,30 @@ Decisions made so far:
 
 **Step 2 (Geocoding) — COMPLETE ✅**
 
-**Step 3 (Frontend Autocomplete) — IN PROGRESS (2026-06-10):**
+**Step 3 (Frontend Autocomplete) — ✅ COMPLETE (2026-06-11):**
 
-Work done this session in `Register.jsx`:
+Work done in `Register.jsx` + `backend/controllers/auth.js`:
 
-- ✅ 3 state variables added: `location` (string), `locationSuggestions` (array), `selectedLocation` (null)
+- ✅ 3 state variables: `location` (string), `locationSuggestions` (array), `selectedLocation` (null)
 - ✅ `handleLocationInput(e)` — updates `location` state + fetches `GET /location/search?q=${e.target.value}` → stores result in `locationSuggestions`
 - ✅ `handleLocationSelect(place)` — sets `location` to `place.display_name`, stores full place in `selectedLocation`, clears `locationSuggestions`
-- ✅ Location `<input>` added in JSX (after phone number field), wired to `handleLocationInput`
-- ✅ Dropdown `<ul>` written — `{locationSuggestions.length > 0 && <ul>...}`, `.map()` with `key={place.display_name}`, displays `place.display_name` per `<li>`
-- 🔲 **RESUME HERE:** Add `onClick` handler to `<li>` — `onClick={() => handleLocationSelect(place)}`
-- 🔲 Update `handleSubmit` to include `lat`/`lon` in POST body (from `selectedLocation.lat` / `selectedLocation.lon`)
-- 🔲 Update backend `controllers/auth.js` `register` function to accept + store lat/lon in DB
+- ✅ Location `<input>` wired to `handleLocationInput`
+- ✅ Dropdown `<ul>` with `key={place.display_name}` + `onClick={() => handleLocationSelect(place)}` on `<li>`
+- ✅ `handleSubmit` sends `location: selectedLocation?.display_name`, `lat: selectedLocation?.lat`, `lon: selectedLocation?.lon`
+- ✅ `backend/controllers/auth.js` — extracts `location`, `latitude` (`req.body.lat`), `longitude` (`req.body.lon`); validates all three in input check; INSERT includes `location, latitude, longitude` ($6, $7, $8)
+- ✅ Tested end-to-end — DBeaver confirmed row 6 (cristiano) has `location`, `latitude` 27.708317, `longitude` 85.320582 saved correctly
+- ✅ DBeaver installed and connected to `futsal_booking` DB (PostgreSQL 18.3, localhost:5432)
 
-**PENDING after frontend autocomplete complete:**
+**Also installed this session:** DBeaver Community 26.1.0 — connected to `futsal_booking` DB.
 
-1. Step 3 (Haversine): write Haversine distance formula in raw SQL
-2. Step 4: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
+**NEXT — Step 4 (Haversine distance formula in raw SQL):**
 
-After Steps 3+4: Owner Dashboard (add venue with geocoded location), resume frontend venue cards wired to real nearby-venues data.
+1. Step 4: write Haversine distance formula in raw SQL
+2. Step 5: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
+
+After Steps 4+5: Owner Dashboard (add venue with geocoded location), resume frontend venue cards wired to real nearby-venues data.
+
+**Pending cleanup (do after Steps 4+5):** Add `required` attribute to all form fields in Register.jsx (frontend validation layer).
 
 User staying on Sonnet 4.6 model (not Opus) for this work — well-documented patterns, no need for frontier reasoning.
 
@@ -338,13 +343,12 @@ refresh:
 
 ## Immediately Next
 
-1. **Schema:** add `latitude`/`longitude` (DECIMAL) columns to `users` + create `futsal_venues` table (with lat/lng) — Step 1 of location-search feature
-2. Build geocoding integration (Nominatim API call → store coords on register/venue-create)
-3. Write Haversine distance formula in raw SQL
-4. Build GET /venues/nearby query + route + controller (returns sorted venues + distance_km)
-5. Add `location` field to user register form (role='user') + new Owner Dashboard (add futsal: image, location, contact)
-6. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
-7. Create remaining DB tables: grounds, time_slots, bookings
+1. **Haversine SQL** — write distance formula in raw SQL (no PostGIS needed)
+2. **GET /venues/nearby** — route + controller + query (returns sorted venues + distance_km)
+3. **Owner Dashboard** — add venue form with geocoded location (same autocomplete pattern as Register)
+4. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
+5. Create remaining DB tables: grounds, time_slots, bookings
+6. Add `required` to all Register.jsx form fields (frontend validation cleanup)
 
 ---
 
