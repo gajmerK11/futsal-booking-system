@@ -1,6 +1,6 @@
 import leftSideImage from "../assets/register.jpg";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 function Register() {
   // Declaring/initializing state variables
@@ -10,6 +10,9 @@ function Register() {
   const [phone_number, setPhoneNumber] = useState("");
   const [role, setRole] = useState("");
   const [registerMessage, setRegisterMessage] = useState("");
+
+  // for debounce
+  const debounceTimer = useRef(null);
 
   // state for location implementaion
   // This one is for 'what user typed'
@@ -29,18 +32,28 @@ function Register() {
 
   // 'Location input' handler function - This is for displaying location suggestion as user types
   async function handleLocationInput(e) {
+    clearTimeout(debounceTimer.current);
     // Step-1: update location state - it means set the 'location' variable to 'e.target.value' which is the current input field value
     setLocation(e.target.value);
-    // Step-2: call the API
-    const response = await fetch(
-      `http://localhost:3000/location/search?q=${e.target.value}`,
-      {
-        method: "GET",
-      },
-    );
-    const data = await response.json();
-    // Storing the 'data' in state so the dropdown can render it.
-    setLocationSuggestions(data);
+
+    // min-length check - don't call API if input is too short
+    if (e.target.value.length < 3) {
+      setLocationSuggestions([]); // clear any existing suggestions
+      return; // stop here
+    }
+
+    // Step-2: call the API after 300ms of no typing
+    debounceTimer.current = setTimeout(async () => {
+      const response = await fetch(
+        `http://localhost:3000/location/search?q=${e.target.value}`,
+        {
+          method: "GET",
+        },
+      );
+      const data = await response.json();
+      // Storing the 'data' in state so the dropdown can render it.
+      setLocationSuggestions(data);
+    }, 300);
   }
 
   // 'Location select' handler function - runs when user clicks a suggestion from dropdown ('place' will be passed by JSX that calls this function)
@@ -90,7 +103,7 @@ function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-100">
-      <div className="flex flex-col md:flex-row md:rounded-2xl shadow-2xl overflow-hidden md:w-[900px] w-full md:h-[540px] md:mx-5">
+      <div className="flex flex-col md:flex-row md:rounded-2xl shadow-2xl overflow-hidden md:w-[900px] w-full md:h-[600px] md:mx-5">
         {/* Left side image */}
         <div className="w-full md:w-1/2">
           <img
@@ -154,7 +167,7 @@ function Register() {
               />
             </div>
             {/* Location field */}
-            <div className="input-animated">
+            <div className="input-animated relative">
               <input
                 type="text"
                 value={location}
@@ -167,11 +180,12 @@ function Register() {
               2. and yes, you might get confused what is this pattern? this is using condition in JSX i.e. if condition match, render this component.
               */}
               {locationSuggestions.length > 0 && (
-                <ul>
+                <ul className="absolute w-full bg-gray-100 border border-t-0 border-indigo-500 z-10">
                   {locationSuggestions.map((place) => (
                     <li
                       key={place.display_name}
                       onClick={() => handleLocationSelect(place)}
+                      className="px-4 py-2 text-sm cursor-pointer hover:bg-indigo-50"
                     >
                       {place.display_name}
                     </li>

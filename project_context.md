@@ -109,16 +109,18 @@ Decisions made so far:
 Work done in `Register.jsx` + `backend/controllers/auth.js`:
 
 - ✅ 3 state variables: `location` (string), `locationSuggestions` (array), `selectedLocation` (null)
-- ✅ `handleLocationInput(e)` — updates `location` state + fetches `GET /location/search?q=${e.target.value}` → stores result in `locationSuggestions`
-- ✅ `handleLocationSelect(place)` — sets `location` to `place.display_name`, stores full place in `selectedLocation`, clears `locationSuggestions`
-- ✅ Location `<input>` wired to `handleLocationInput`
-- ✅ Dropdown `<ul>` with `key={place.display_name}` + `onClick={() => handleLocationSelect(place)}` on `<li>`
+- ✅ `handleLocationInput(e)` — debounced (300ms, useRef timer), min 3 chars guard, fetches `GET /location/search?q=...` → stores in `locationSuggestions`
+- ✅ `handleLocationSelect(place)` — sets `location` to `place.display_name`, stores full place in `selectedLocation`, clears suggestions
+- ✅ Dropdown `<ul>` — `absolute w-full`, `border-indigo-500 border-t-0` (connects to input), `hover:bg-indigo-50` on `<li>`, `z-10`
 - ✅ `handleSubmit` sends `location: selectedLocation?.display_name`, `lat: selectedLocation?.lat`, `lon: selectedLocation?.lon`
-- ✅ `backend/controllers/auth.js` — extracts `location`, `latitude` (`req.body.lat`), `longitude` (`req.body.lon`); validates all three in input check; INSERT includes `location, latitude, longitude` ($6, $7, $8)
-- ✅ Tested end-to-end — DBeaver confirmed row 6 (cristiano) has `location`, `latitude` 27.708317, `longitude` 85.320582 saved correctly
-- ✅ DBeaver installed and connected to `futsal_booking` DB (PostgreSQL 18.3, localhost:5432)
+- ✅ `backend/controllers/auth.js` — validates + stores `location`, `latitude`, `longitude` in DB
+- ✅ `backend/controllers/location.js` — scoped to Kathmandu (`${q}, Kathmandu` appended to query); display_name truncated to 3 parts (`split(",").slice(0,3).join(",")`)
+- ✅ Card height: `md:h-[600px]` (increased from 540 to fit extra location field)
+- ✅ Tested end-to-end — DBeaver confirmed coords saved correctly
 
-**Also installed this session:** DBeaver Community 26.1.0 — connected to `futsal_booking` DB.
+**Pending frontend validations (do all at once later):**
+- `required` attribute on all form fields
+- Show error if user types location but doesn't pick from dropdown (`!selectedLocation` check in `handleSubmit`)
 
 **NEXT — Step 4 (Haversine distance formula in raw SQL):**
 
@@ -126,8 +128,6 @@ Work done in `Register.jsx` + `backend/controllers/auth.js`:
 2. Step 5: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
 
 After Steps 4+5: Owner Dashboard (add venue with geocoded location), resume frontend venue cards wired to real nearby-venues data.
-
-**Pending cleanup (do after Steps 4+5):** Add `required` attribute to all form fields in Register.jsx (frontend validation layer).
 
 User staying on Sonnet 4.6 model (not Opus) for this work — well-documented patterns, no need for frontier reasoning.
 

@@ -10,9 +10,11 @@ async function searchLocation(req, res) {
     if (!q) {
       return res.status(400).json({ message: "Search query is required" });
     }
+    // To limit the search within Kathmandu so appending Kathmandu in url query
+    const searchQuery = `${q}, Kathmandu`;
     // Calling the api
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${q}&format=json&countrycodes=np&accept-language=en`,
+      `https://nominatim.openstreetmap.org/search?q=${searchQuery}&format=json&countrycodes=np&accept-language=en`,
       {
         method: "GET",
         // Here we have sent custom header called 'User-Agent' because Nominatim requires this header
@@ -26,7 +28,13 @@ async function searchLocation(req, res) {
     const results = data.map((place) => ({
       lat: place.lat,
       lon: place.lon,
-      display_name: place.display_name,
+      /**
+       * Here we have applied split, slice and join for:
+       * Split by "," → array of parts → take first 3 → join back with ","
+       * to
+       * display only 3 parts of address like 'Milan Chowk, Way to Jorpati, Mulpani'
+       */
+      display_name: place.display_name.split(",").slice(0, 3).join(","),
     }));
 
     return res.status(200).json(results);
