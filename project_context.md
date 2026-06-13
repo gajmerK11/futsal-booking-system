@@ -28,6 +28,20 @@ type: project
   - Separation of concerns (routes → controllers → models)
   - Security practices (never expose passwords, use env vars for secrets)
 
+### NEW Learning Framework (added 2026-06-13) — follow for EVERY implementation, no matter how small:
+
+1. **Problem → Computational breakdown first.** Before any code: explain real-world problem, how to break it down, how to think about it programmatically. Succinct — no rabbit holes. Just enough to solve THIS problem.
+2. **Approaches + tradeoffs.** Show usual conventions, recommend one, explain why, state the benefit/purpose. Don't dump everything — focus on what's relevant.
+3. **Algorithm at tiniest level.** After approach decided: give step-by-step algorithm so user builds natural mental model. Goal = user can solve similar problems independently in future without help.
+4. **Post-implementation: brief doc + quiz.** After finishing: give concise reference doc user can save. Then quiz to check understanding.
+
+**User's 4 programming principles to reinforce:**
+
+1. Everything has a purpose — everything solves a particular problem
+2. Find the algorithm behind every implementation
+3. Tool Knowledge + Concept Knowledge (both matter)
+4. It's not about the language — it's about the ecosystem
+
 ---
 
 ## Learner Profile
@@ -119,13 +133,38 @@ Work done in `Register.jsx` + `backend/controllers/auth.js`:
 - ✅ Tested end-to-end — DBeaver confirmed coords saved correctly
 
 **Pending frontend validations (do all at once later):**
+
 - `required` attribute on all form fields
 - Show error if user types location but doesn't pick from dropdown (`!selectedLocation` check in `handleSubmit`)
 
-**NEXT — Step 4 (Haversine distance formula in raw SQL):**
+**Step 4 (Haversine) — IN PROGRESS (2026-06-13):**
 
-1. Step 4: write Haversine distance formula in raw SQL
-2. Step 5: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
+Concepts covered + decided:
+- No query params needed — frontend sends `GET /venues/nearby` with Bearer token only
+- `verifyToken` middleware extracts `req.user.id` → backend fetches user lat/lon from `users` table
+- Haversine formula in raw SQL (no PostGIS) — chosen approach
+- SQL alias problem: `WHERE distance_km <= 10` fails — alias not available at WHERE stage
+- Solution: subquery — inner query computes `distance_km`, outer query filters + sorts on it
+- New files: `routes/venues.js` + `controllers/venues.js`, mounted at `/venues` in `index.js`
+- `GET /venues/nearby` is a protected route (needs `verifyToken`)
+
+**Algorithm decided:**
+```
+1. Extract user_id from req.user.id (set by verifyToken)
+2. SELECT latitude, longitude FROM users WHERE user_id = $1
+3. Run subquery:
+   SELECT * FROM (
+     SELECT *, (haversine expression) AS distance_km
+     FROM futsal_venues
+   ) AS venues_with_distance
+   WHERE distance_km <= 10
+   ORDER BY distance_km ASC
+4. Return results as JSON
+```
+
+**User stopped here — resumes with writing `routes/venues.js` in the evening.**
+
+1. Step 5: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
 
 After Steps 4+5: Owner Dashboard (add venue with geocoded location), resume frontend venue cards wired to real nearby-venues data.
 
