@@ -137,7 +137,7 @@ Work done in `Register.jsx` + `backend/controllers/auth.js`:
 - `required` attribute on all form fields
 - Show error if user types location but doesn't pick from dropdown (`!selectedLocation` check in `handleSubmit`)
 
-**Step 4 (Haversine) — IN PROGRESS (2026-06-13):**
+**Step 4 (Haversine) — IN PROGRESS (2026-06-16):**
 
 Concepts covered + decided:
 - No query params needed — frontend sends `GET /venues/nearby` with Bearer token only
@@ -147,6 +147,20 @@ Concepts covered + decided:
 - Solution: subquery — inner query computes `distance_km`, outer query filters + sorts on it
 - New files: `routes/venues.js` + `controllers/venues.js`, mounted at `/venues` in `index.js`
 - `GET /venues/nearby` is a protected route (needs `verifyToken`)
+
+**Export style decided:** `module.exports = getNearbyVenues` (direct export, not named object) — matches `controllers/user.js` pattern. Import in route: `const getNearbyVenues = require("../controllers/venues")` (no destructuring).
+
+**`routes/venues.js` — WRITTEN ✅:**
+```js
+const express = require("express");
+const router = express.Router();
+const verifyTokenMiddleware = require("../middleware/verifyToken");
+const getNearbyVenues = require("../controllers/venues");
+
+router.get("/nearby", verifyTokenMiddleware, getNearbyVenues);
+
+module.exports = router;
+```
 
 **Algorithm decided:**
 ```
@@ -162,7 +176,8 @@ Concepts covered + decided:
 4. Return results as JSON
 ```
 
-**User stopped here — resumes with writing `routes/venues.js` in the evening.**
+**User stopped here — resumes with writing `controllers/venues.js` tomorrow morning.**
+Next question to ask: "What two things does `controllers/venues.js` need to import?"
 
 1. Step 5: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
 
