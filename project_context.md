@@ -137,7 +137,7 @@ Work done in `Register.jsx` + `backend/controllers/auth.js`:
 - `required` attribute on all form fields
 - Show error if user types location but doesn't pick from dropdown (`!selectedLocation` check in `handleSubmit`)
 
-**Step 4 (Haversine) — IN PROGRESS (2026-06-16):**
+**Step 4 (Haversine) — IN PROGRESS (2026-06-17):**
 
 Concepts covered + decided:
 - No query params needed — frontend sends `GET /venues/nearby` with Bearer token only
@@ -176,8 +176,32 @@ module.exports = router;
 4. Return results as JSON
 ```
 
-**User stopped here — resumes with writing `controllers/venues.js` tomorrow morning.**
-Next question to ask: "What two things does `controllers/venues.js` need to import?"
+**`controllers/venues.js` — IN PROGRESS (steps 1–3 written, step 4 pending):**
+```js
+const pool = require("../models/db.js");
+
+async function getNearbyVenues(req, res) {
+  // Step-1: Extract user_id from req.user (set by verifyToken middleware)
+  const user_id = req.user.id;
+  // Step-2: Fetch user lat/lon from DB
+  const result = await pool.query(
+    "SELECT latitude, longitude FROM users WHERE user_id = $1",
+    [user_id],
+  );
+  const latitude = result.rows[0].latitude;
+  const longitude = result.rows[0].longitude;
+  // Step-3: Haversine subquery
+  const haversineExpression = `6371 * acos(
+  cos(radians($1)) * cos(radians(latitude)) * cos(radians(longitude) - radians($2)) + sin(radians($1)) * sin(radians(latitude))`;
+  const venueResult = await pool.query(
+    `SELECT * FROM (SELECT *, ${haversineExpression} AS distance_km FROM futsal_venues) AS venues_with_distance WHERE distance_km <= 10 ORDER BY distance_km ASC`,
+    [latitude, longitude],
+  );
+  // Step-4: return JSON — PENDING (user stopped here)
+}
+```
+
+**User stopped here — resumes tomorrow morning. Next step: write Step-4 return JSON line, then add try/catch error handling, then module.exports.**
 
 1. Step 5: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
 
