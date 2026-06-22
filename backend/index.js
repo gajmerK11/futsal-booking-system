@@ -36,6 +36,9 @@ app.use("/user", userRoutes);
 const locationRoutes = require("./routes/location.js");
 // this appends '/location' at beginning of '/search' i.e. '/location/search
 app.use("/location", locationRoutes);
+// Venue routes
+const venueRoutes = require("./routes/venues.js");
+app.use("/venues", venueRoutes);
 
 app.listen(3000, () => {
   console.log("Server started");
