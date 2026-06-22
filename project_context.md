@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-07:** Auth 100% complete. Dashboard layout shell complete — Sidebar ✅, DashboardHeader ✅, DashboardLayout ✅. Hero section in Dashboard.jsx ✅ COMPLETE. Pivoted to backend work — building location-based "venues near you" feature (geocoding + distance search) before continuing static frontend cards.
+- **Status as of 2026-06-22:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅ (schema, geocoding, frontend autocomplete, Haversine SQL + controller + route). Next: Owner Dashboard, frontend venue cards wired to real data, remaining DB tables.
 
 ---
 
@@ -137,7 +137,7 @@ Work done in `Register.jsx` + `backend/controllers/auth.js`:
 - `required` attribute on all form fields
 - Show error if user types location but doesn't pick from dropdown (`!selectedLocation` check in `handleSubmit`)
 
-**Step 4 (Haversine) — IN PROGRESS (2026-06-17):**
+**Step 4 (Haversine + Controller + Route) — COMPLETE ✅ (2026-06-22):**
 
 Concepts covered + decided:
 - No query params needed — frontend sends `GET /venues/nearby` with Bearer token only
@@ -147,8 +147,12 @@ Concepts covered + decided:
 - Solution: subquery — inner query computes `distance_km`, outer query filters + sorts on it
 - New files: `routes/venues.js` + `controllers/venues.js`, mounted at `/venues` in `index.js`
 - `GET /venues/nearby` is a protected route (needs `verifyToken`)
+- Export style: `module.exports = getNearbyVenues` (direct export, matches `controllers/user.js` pattern)
 
-**Export style decided:** `module.exports = getNearbyVenues` (direct export, not named object) — matches `controllers/user.js` pattern. Import in route: `const getNearbyVenues = require("../controllers/venues")` (no destructuring).
+Post-implementation quiz completed ✅ — user correctly answered:
+1. No-token request → `verifyToken.js` returns 401 "No authorization header."
+2. Null lat/lon → Haversine fails → catch block returns 500 "Internal Server Error"
+3. `$1`/`$2` parameterized queries prevent SQL injection
 
 **`routes/venues.js` — WRITTEN ✅:**
 ```js
@@ -176,32 +180,15 @@ module.exports = router;
 4. Return results as JSON
 ```
 
-**`controllers/venues.js` — IN PROGRESS (steps 1–3 written, step 4 pending):**
-```js
-const pool = require("../models/db.js");
+**`controllers/venues.js` — COMPLETE ✅:**
+- Step 1: Extract `user_id` from `req.user.id`
+- Step 2: Fetch user lat/lon from `users` table
+- Step 3: Haversine subquery with parameterized `$1`/`$2` (SQL injection safe)
+- Step 4: Return `res.status(200).json({ message, data: venueResult.rows })`
+- try/catch with `console.error(error)` + 500 response
+- `module.exports = getNearbyVenues` (direct export pattern)
 
-async function getNearbyVenues(req, res) {
-  // Step-1: Extract user_id from req.user (set by verifyToken middleware)
-  const user_id = req.user.id;
-  // Step-2: Fetch user lat/lon from DB
-  const result = await pool.query(
-    "SELECT latitude, longitude FROM users WHERE user_id = $1",
-    [user_id],
-  );
-  const latitude = result.rows[0].latitude;
-  const longitude = result.rows[0].longitude;
-  // Step-3: Haversine subquery
-  const haversineExpression = `6371 * acos(
-  cos(radians($1)) * cos(radians(latitude)) * cos(radians(longitude) - radians($2)) + sin(radians($1)) * sin(radians(latitude))`;
-  const venueResult = await pool.query(
-    `SELECT * FROM (SELECT *, ${haversineExpression} AS distance_km FROM futsal_venues) AS venues_with_distance WHERE distance_km <= 10 ORDER BY distance_km ASC`,
-    [latitude, longitude],
-  );
-  // Step-4: return JSON — PENDING (user stopped here)
-}
-```
-
-**User stopped here — resumes tomorrow morning. Next step: write Step-4 return JSON line, then add try/catch error handling, then module.exports.**
+**Mounted in `index.js`** — `app.use("/venues", venueRoutes)` ✅
 
 1. Step 5: `GET /venues/nearby` route + controller + query (returns sorted venues + distance_km)
 
@@ -218,14 +205,18 @@ futsal-booking-system/
 ├── backend/
 │   ├── controllers/
 │   │   ├── auth.js        ← register + login + refresh (all complete ✅)
-│   │   └── user.js        ← getProfile (returns req.user) ✅
+│   │   ├── user.js        ← getProfile (returns req.user) ✅
+│   │   ├── location.js    ← searchLocation (Nominatim proxy) ✅
+│   │   └── venues.js      ← getNearbyVenues (Haversine query) ✅
 │   ├── middleware/
 │   │   └── verifyToken.js ← reads Authorization header → jwt.verify → req.user → next() ✅
 │   ├── models/
 │   │   └── db.js          ← pg Pool, dotenv config, exports pool
 │   ├── routes/
 │   │   ├── auth.js        ← POST /register, POST /login, POST /refresh ✅
-│   │   └── user.js        ← GET /profile (verifyToken + getProfile) ✅
+│   │   ├── user.js        ← GET /profile (verifyToken + getProfile) ✅
+│   │   ├── location.js    ← GET /search (Nominatim proxy) ✅
+│   │   └── venues.js      ← GET /nearby (verifyToken + getNearbyVenues) ✅
 │   ├── sql/
 │   │   └── schema.sql     ← users table only (4 remaining tables pending)
 │   ├── .env               ← DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, JWT_SECRET, REFRESH_TOKEN_SECRET
@@ -271,7 +262,7 @@ futsal-booking-system/
 - Express server on port 3000
 - Middleware: `express.json()`, `cors(corsOptions)`, `cookieParser()`
 - corsOptions: `origin: "http://localhost:5173"`, `credentials: true`
-- Routes: authRoutes at `/auth`, userRoutes at `/user`
+- Routes: authRoutes at `/auth`, userRoutes at `/user`, locationRoutes at `/location`, venueRoutes at `/venues`
 
 ### controllers/auth.js — ALL COMPLETE ✅
 
@@ -421,8 +412,8 @@ refresh:
 
 ## Immediately Next
 
-1. **Haversine SQL** — write distance formula in raw SQL (no PostGIS needed)
-2. **GET /venues/nearby** — route + controller + query (returns sorted venues + distance_km)
+1. ~~**Haversine SQL** — write distance formula in raw SQL~~ ✅ DONE
+2. ~~**GET /venues/nearby** — route + controller + query~~ ✅ DONE
 3. **Owner Dashboard** — add venue form with geocoded location (same autocomplete pattern as Register)
 4. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
 5. Create remaining DB tables: grounds, time_slots, bookings
