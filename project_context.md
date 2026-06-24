@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-22:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅ (schema, geocoding, frontend autocomplete, Haversine SQL + controller + route). Next: Owner Dashboard, frontend venue cards wired to real data, remaining DB tables.
+- **Status as of 2026-06-24:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅ (schema, geocoding, frontend autocomplete, Haversine SQL + controller + route). Owner Dashboard design almost finalized in Stitch (simple: My Venues + Add/Edit Venue + Booking Requests). Next: implement Owner Dashboard (starting 2026-06-25), frontend venue cards wired to real data, remaining DB tables.
 
 ---
 
@@ -408,13 +408,20 @@ refresh:
 - Cards: white, rounded-2xl, large drop shadow
 - Status badges: green=approved, yellow=pending, gray=completed
 
+### Owner Dashboard Design (Stitch — almost finalized 2026-06-24)
+
+Scope kept minimal — 3 features only:
+1. **My Venues** — list owner's venues (name, location, phone), Edit button per venue, "+ Add New Venue" button
+2. **Add/Edit Venue form** — fields: Venue Name, Location (autocomplete, same pattern as Register), Phone Number, Venue Image upload
+3. **Booking Requests page** — table: Player Name, Ground, Date, Time Slot, Status badges (Pending/Approved/Rejected), Approve/Reject action buttons on pending rows
+
 ---
 
 ## Immediately Next
 
 1. ~~**Haversine SQL** — write distance formula in raw SQL~~ ✅ DONE
 2. ~~**GET /venues/nearby** — route + controller + query~~ ✅ DONE
-3. **Owner Dashboard** — add venue form with geocoded location (same autocomplete pattern as Register)
+3. **Owner Dashboard** — design almost finalized (2026-06-24), implementation starts 2026-06-25
 4. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
 5. Create remaining DB tables: grounds, time_slots, bookings
 6. Add `required` to all Register.jsx form fields (frontend validation cleanup)
