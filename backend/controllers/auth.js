@@ -139,6 +139,7 @@ async function login(req, res) {
       message: "Login successful",
       accessToken, // similar to writing 'accessToken: accessToken' - instead of this, used something called 'object shorthand' of js (this way of writing is used if both key and value have same name)
       username: user.username,
+      role: user.role,
     });
   } catch (error) {
     console.log(error);

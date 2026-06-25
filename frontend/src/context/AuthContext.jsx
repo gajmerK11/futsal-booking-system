@@ -6,8 +6,11 @@ const AuthContext = createContext();
 // Creates provider
 function AuthProvider({ children }) {
   const [accessToken, setAccessToken] = useState("");
+  const [role, setRole] = useState("");
   return (
-    <AuthContext.Provider value={{ accessToken, setAccessToken }}>
+    <AuthContext.Provider
+      value={{ accessToken, setAccessToken, role, setRole }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-24:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅ (schema, geocoding, frontend autocomplete, Haversine SQL + controller + route). Owner Dashboard design almost finalized in Stitch (simple: My Venues + Add/Edit Venue + Booking Requests). Next: implement Owner Dashboard (starting 2026-06-25), frontend venue cards wired to real data, remaining DB tables.
+- **Status as of 2026-06-25:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch (3 screens). Stitch MCP connected. **Owner Dashboard implementation started:** role-based routing done (login → `/owner/dashboard` for owners), `OwnerDashboard.jsx` placeholder created. Next: build empty state UI (sidebar decision pending — reuse vs separate).
 
 ---
 
@@ -231,12 +231,13 @@ futsal-booking-system/
 │   │   │   │   ├── Sidebar.jsx         ← complete ✅
 │   │   │   │   ├── DashboardHeader.jsx ← complete ✅ (search bar + username/avatar)
 │   │   │   │   └── DashboardLayout.jsx ← complete ✅ (Sidebar + Header + children)
-│   │   │   ├── Login.jsx     ← complete ✅
+│   │   │   ├── Login.jsx     ← complete ✅ (role-based navigate: user→/dashboard, owner→/owner/dashboard)
 │   │   │   ├── Register.jsx  ← complete ✅
-│   │   │   └── Dashboard.jsx ← in progress (layout done, main content pending)
+│   │   │   ├── Dashboard.jsx ← in progress (layout done, main content pending)
+│   │   │   └── OwnerDashboard.jsx ← placeholder created ✅ (empty state UI next)
 │   │   ├── context/
-│   │   │   └── AuthContext.jsx ← createContext + AuthProvider + useState(accessToken) ✅
-│   │   ├── App.jsx          ← Routes: /login, /register, /dashboard, * → /login
+│   │   │   └── AuthContext.jsx ← createContext + AuthProvider + useState(accessToken, role) ✅
+│   │   ├── App.jsx          ← Routes: /login, /register, /dashboard, /owner/dashboard, * → /login
 │   │   ├── main.jsx         ← BrowserRouter + AuthProvider wraps App
 │   │   ├── index.css        ← @import tailwindcss, Inter font, @theme tokens, .input-animated, .btn-fill
 │   │   └── App.css          ← empty
@@ -281,7 +282,7 @@ login:
   - jwt.sign accessToken (15m, JWT_SECRET)
   - jwt.sign refreshToken (7d, REFRESH_TOKEN_SECRET)
   - res.cookie("refreshToken", ..., { httpOnly, secure:false, sameSite:"strict", maxAge:7d })
-  - Return 200 + { message, accessToken, username }
+  - Return 200 + { message, accessToken, username, role }
 
 refresh:
   - Read req.cookies.refreshToken → 401 if missing
@@ -337,15 +338,17 @@ refresh:
 
 ### AuthContext.jsx ✅
 
-- `createContext`, `AuthProvider` with `useState(null)` for accessToken
+- `createContext`, `AuthProvider` with `useState("")` for accessToken + `useState("")` for role
+- Provider value: `{ accessToken, setAccessToken, role, setRole }`
 - Exports: `AuthContext`, `AuthProvider`
 - Wraps entire app in `main.jsx`
 
 ### Login.jsx ✅
 
 - `credentials: "include"` on fetch — stores httpOnly refreshToken cookie
-- `setAccessToken(data.accessToken)` after login success
-- navigate('/dashboard', { state: { username, from: 'login' } })
+- `setAccessToken(data.accessToken)` + `setRole(data.role)` after login success
+- Role-based navigation: `data.role === "user"` → `/dashboard`, else → `/owner/dashboard`
+- Uses `data.role` (not context `role`) for navigate — avoids async state update bug
 
 ### Sidebar.jsx ✅ COMPLETE
 
@@ -408,12 +411,45 @@ refresh:
 - Cards: white, rounded-2xl, large drop shadow
 - Status badges: green=approved, yellow=pending, gray=completed
 
-### Owner Dashboard Design (Stitch — almost finalized 2026-06-24)
+### Owner Dashboard Design (Stitch — FINALIZED 2026-06-25)
 
-Scope kept minimal — 3 features only:
-1. **My Venues** — list owner's venues (name, location, phone), Edit button per venue, "+ Add New Venue" button
-2. **Add/Edit Venue form** — fields: Venue Name, Location (autocomplete, same pattern as Register), Phone Number, Venue Image upload
-3. **Booking Requests page** — table: Player Name, Ground, Date, Time Slot, Status badges (Pending/Approved/Rejected), Approve/Reject action buttons on pending rows
+**Stitch project:** "FutsalBook User Dashboard" (project ID: `18191911654176959109`)
+**3 screens finalized** (all others hidden/cleaned):
+
+#### Screen 1: "Owner Dashboard - Balanced Proportions" (main state, has data)
+- **Sidebar nav:** Dashboard (active), Edit Venue, Booking Requests, Profile, Logout
+- **User profile** in sidebar: avatar + name + "Venue Owner" label
+- **Welcome section:** "Hello, {name}" + tagline "Manage your venues. Approve bookings. Grow."
+- **MY VENUE card:** venue image + name + address + phone number
+- **Stats row (3 cards):** Total Bookings (event_available icon), Pending Requests (pending_actions icon), Approved Today (check_circle icon)
+- **Recent Booking Requests table:**
+  - Columns: Player Name | Venue | Ground | Date | Time Slot | Status
+  - Status badges: PENDING (yellow), APPROVED (green), REJECTED (red)
+
+#### Screen 2: "Owner Dashboard - Empty State" (new owner, no venues yet)
+- Same sidebar + welcome as Screen 1
+- MY VENUE card → "+ ADD VENUE" button + empty state message: "Get started by listing your futsal facility to start receiving bookings."
+- Stats all show **0**
+- Booking table → "No booking requests yet" + "Once you add a venue and it goes live, customer bookings will appear here."
+
+#### Screen 3: "Add Venue - Refined Layout & Pricing" (add venue form)
+- **Breadcrumb:** Dashboard > Add Venue
+- **Section 1 — General Information:**
+  - Venue Name (text input)
+  - Phone Number (text input)
+  - Full Address (text input with location_on icon — reuse autocomplete pattern from Register)
+- **Section 2 — Venue Details:**
+  - Number of Pitches: radio buttons (1 / 2 / 4 / 5+)
+  - Pitch Type: options (5-a-side / 7-a-side / Mixed)
+  - Surface Type: options (Indoor Turf / Outdoor Turf / Hardwood Court)
+- **Section 3 — Pricing:**
+  - Price per Hour per pitch (dynamic fields based on pitch count)
+- **Section 4 — Features & Amenities:**
+  - Checkboxes: Parking, Changing Rooms, Showers, Cafe, Free WiFi, Lockers
+- **Section 5 — Venue Imagery:**
+  - Drag-drop file upload area (JPG/PNG, min 1920×1080, max 10 images)
+  - "Select Files" button
+- **CTA:** "Publish Venue" button
 
 ---
 
@@ -421,7 +457,11 @@ Scope kept minimal — 3 features only:
 
 1. ~~**Haversine SQL** — write distance formula in raw SQL~~ ✅ DONE
 2. ~~**GET /venues/nearby** — route + controller + query~~ ✅ DONE
-3. **Owner Dashboard** — design almost finalized (2026-06-24), implementation starts 2026-06-25
+3. **Owner Dashboard — IN PROGRESS (2026-06-25):**
+   - ✅ Role-based routing: login response includes `role`, stored in AuthContext, `Login.jsx` navigates to `/owner/dashboard` for owners
+   - ✅ `OwnerDashboard.jsx` placeholder created, route added in `App.jsx`
+   - ⏭️ **Next: Build empty state UI** — pending decision: reuse `DashboardLayout`/`Sidebar` with role-based nav items (option A) vs create separate `OwnerSidebar`+`OwnerDashboardLayout` (option B)
+   - Then: welcome section, MY VENUE empty card + ADD VENUE button, stats row (all 0), empty booking table
 4. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
 5. Create remaining DB tables: grounds, time_slots, bookings
 6. Add `required` to all Register.jsx form fields (frontend validation cleanup)
