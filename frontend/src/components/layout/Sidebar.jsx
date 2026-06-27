@@ -1,4 +1,56 @@
+import { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
 function Sidebar() {
+  const userNav = [
+    {
+      label: "Dashboard",
+      href: "#",
+      icon: "dashboard",
+    },
+    {
+      label: "Venues",
+      href: "#",
+      icon: "stadium",
+    },
+    {
+      label: "Bookings",
+      href: "#",
+      icon: "event_available",
+    },
+    {
+      label: "Profile",
+      href: "#",
+      icon: "person",
+    },
+  ];
+
+  const ownerNav = [
+    {
+      label: "Dashboard",
+      href: "#",
+      icon: "dashboard",
+    },
+    {
+      label: "Edit Venue ",
+      href: "#",
+      icon: "storefront",
+    },
+    {
+      label: "Booking Requests ",
+      href: "#",
+      icon: "calendar_month",
+    },
+    {
+      label: "Profile",
+      href: "#",
+      icon: "person",
+    },
+  ];
+
+  const { role } = useContext(AuthContext);
+
+  const navItems = role === "user" ? userNav : ownerNav;
+
   return (
     <aside className="fixed inset-y-0 left-0 w-64 bg-[#f5f5f4] border-r border-outline-variant hidden md:flex flex-col">
       {/* Logo */}
@@ -8,40 +60,16 @@ function Sidebar() {
 
       {/* Nav links */}
       <nav className="px-4 space-y-2">
-        <a
-          href="#"
-          className="flex items-center gap-4 px-4 py-3 rounded-xl uppercase text-xs font-semibold tracking-widest hover:text-primary text-primary bg-primary-fixed"
-        >
-          {/* This span is google material icon. This is how we render it. */}
-          <span
-            className="material-symbols-outlined"
-            style={{ fontVariationSettings: "'FILL' 1" }}
+        {navItems.map((item) => (
+          <a
+            href={item.href}
+            className="flex items-center gap-4 px-4 py-3"
+            key={item.label}
           >
-            dashboard
-          </span>
-          Dashboard
-        </a>
-        <a
-          href="#"
-          className="flex items-center gap-4 px-4 py-3 rounded-xl uppercase text-xs font-semibold tracking-widest hover:text-primary hover:bg-surface-container text-on-surface-variant"
-        >
-          <span className="material-symbols-outlined">stadium</span>
-          Venues
-        </a>
-        <a
-          href="#"
-          className="flex items-center gap-4 px-4 py-3 rounded-xl uppercase text-xs font-semibold tracking-widest hover:text-primary hover:bg-surface-container text-on-surface-variant"
-        >
-          <span className="material-symbols-outlined">event_available</span>
-          Bookings
-        </a>
-        <a
-          href="#"
-          className="flex items-center gap-4 px-4 py-3 rounded-xl uppercase text-xs font-semibold tracking-widest hover:text-primary hover:bg-surface-container text-on-surface-variant"
-        >
-          <span className="material-symbols-outlined">person</span>
-          Profile
-        </a>
+            <span className="material-symbols-outlined">{item.icon}</span>
+            {item.label}
+          </a>
+        ))}
       </nav>
 
       {/* Logout button */}

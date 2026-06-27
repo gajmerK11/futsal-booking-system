@@ -1,9 +1,13 @@
+import { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
+
 function DashboardHeader() {
+  const { role } = useContext(AuthContext);
   return (
     <header className="sticky top-0 bg-surface-container-lowest border-b border-outline-variant px-6 py-4">
       <div className="flex justify-between items-center">
         {/* Search bar */}
-        <div className="relative ml-4">
+        <div className={`relative ml-4 ${role === "user" ? "" : "hidden"}`}>
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
             search
           </span>
@@ -13,10 +17,17 @@ function DashboardHeader() {
           />
         </div>
         {/* Right - username + avatar */}
-        <div className="flex items-center gap-3">
+        <div
+          className={`flex items-center gap-3 ${role !== "user" ? "ml-auto" : ""}`}
+        >
           {/* username */}
-          <span className="font-semibold text-sm text-on-surface">
+          <span className="font-semibold text-sm text-on-surface flex flex-col">
             ALEX MORGAN
+            {role !== "user" && (
+              <span className="text-xs text-on-surface-variant text-right">
+                Venue Owner
+              </span>
+            )}
           </span>
           {/* profile-picture */}
           <div className="w-9 h-9 rounded-full bg-inverse-surface text-white flex items-center justify-center text-xs font-bold">

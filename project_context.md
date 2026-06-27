@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-25:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch (3 screens). Stitch MCP connected. **Owner Dashboard implementation started:** role-based routing done (login → `/owner/dashboard` for owners), `OwnerDashboard.jsx` placeholder created. Next: build empty state UI (sidebar decision pending — reuse vs separate).
+- **Status as of 2026-06-27:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch (3 screens). Stitch MCP connected. **Owner Dashboard implementation in progress:** role-based routing done, sidebar refactor COMPLETE ✅ (role-based nav with `userNav`/`ownerNav` arrays + `.map()` + `key` prop). `DashboardHeader.jsx` updated: search bar hidden for owner, "Venue Owner" label shown, `ml-auto` push. `OwnerDashboard.jsx` wrapped in `<DashboardLayout>` ✅. **Logout feature next:** backend endpoint (`POST /auth/logout` — clear httpOnly cookie) + frontend (clear AuthContext). User will write logout controller.
 
 ---
 
@@ -350,19 +350,25 @@ refresh:
 - Role-based navigation: `data.role === "user"` → `/dashboard`, else → `/owner/dashboard`
 - Uses `data.role` (not context `role`) for navigate — avoids async state update bug
 
-### Sidebar.jsx ✅ COMPLETE
+### Sidebar.jsx — ✅ COMPLETE (role-based nav)
 
 - Fixed sidebar: w-64, bg-[#f5f5f4], full height, border-r border-outline-variant
 - Brand: "FUTSALBOOK" — font-extrabold, uppercase, tracking-tighter
-- Nav: Dashboard (active — text-primary + bg-primary-fixed + filled icon), Venues, Bookings, Profile
-- Inactive links: text-on-surface-variant + hover:text-primary + hover:bg-surface-container (all 3)
+- **Decision: Option A — reuse single Sidebar, role-based nav items**
+- Two nav arrays: `userNav` (Dashboard, Venues, Bookings, Profile) and `ownerNav` (Dashboard, Edit Venue, Booking Requests, Profile)
+- Owner icons: `dashboard`, `storefront`, `calendar_month`, `person`
+- Pick array: `const navItems = role === "user" ? userNav : ownerNav` → `.map()` with `key={item.label}` inside `<nav>`
+- `role` from `useContext(AuthContext)`
+- Import path: `../../context/AuthContext` (two levels up from `layout/`)
 - Logout button: pill, dark→indigo hover, flex centered, logout icon + text-xs tracking-widest
 
-### DashboardHeader.jsx ✅ COMPLETE
+### DashboardHeader.jsx ✅ COMPLETE (role-aware)
 
 - `sticky top-0 bg-surface-container-lowest border-b border-outline-variant px-6 py-4`
-- Left: search bar — `relative` wrapper, Material Symbols search icon (absolute positioned), input `w-96 rounded-full bg-white border pl-10`
+- Left: search bar — hidden for owner (`role === "user" ? "" : "hidden"`), visible for user
 - Right: username span + avatar circle (`w-9 h-9 rounded-full bg-inverse-surface` with initials "AM")
+- Owner: shows "Venue Owner" label below name (inline `<span>`, not `<p>` inside `<span>`)
+- Owner: `ml-auto` on right section pushes username/avatar right when search bar hidden
 - Hardcoded "ALEX MORGAN" — will be dynamic later
 
 ### DashboardLayout.jsx ✅ COMPLETE
@@ -457,11 +463,13 @@ refresh:
 
 1. ~~**Haversine SQL** — write distance formula in raw SQL~~ ✅ DONE
 2. ~~**GET /venues/nearby** — route + controller + query~~ ✅ DONE
-3. **Owner Dashboard — IN PROGRESS (2026-06-25):**
+3. **Owner Dashboard — IN PROGRESS (2026-06-27):**
    - ✅ Role-based routing: login response includes `role`, stored in AuthContext, `Login.jsx` navigates to `/owner/dashboard` for owners
-   - ✅ `OwnerDashboard.jsx` placeholder created, route added in `App.jsx`
-   - ⏭️ **Next: Build empty state UI** — pending decision: reuse `DashboardLayout`/`Sidebar` with role-based nav items (option A) vs create separate `OwnerSidebar`+`OwnerDashboardLayout` (option B)
-   - Then: welcome section, MY VENUE empty card + ADD VENUE button, stats row (all 0), empty booking table
+   - ✅ `OwnerDashboard.jsx` wrapped in `<DashboardLayout>` — sidebar + header rendering
+   - ✅ Sidebar refactor COMPLETE: role-based nav with `.map()` + `key` prop, import path fixed
+   - ✅ DashboardHeader role-aware: search hidden for owner, "Venue Owner" label shown
+   - 🔧 **Logout feature next:** backend `POST /auth/logout` (clear httpOnly refreshToken cookie) + frontend (clear AuthContext accessToken/role, navigate to login)
+   - ⏭️ After logout: build Owner Dashboard empty state sections (welcome, MY VENUE empty card + ADD VENUE button, stats row all 0, empty booking table)
 4. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
 5. Create remaining DB tables: grounds, time_slots, bookings
 6. Add `required` to all Register.jsx form fields (frontend validation cleanup)
