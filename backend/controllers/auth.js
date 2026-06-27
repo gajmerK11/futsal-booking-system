@@ -178,4 +178,9 @@ function refresh(req, res) {
   }
 }
 
-module.exports = { register, login, refresh };
+function logout(req, res) {
+  res.clearCookie("refreshToken");
+  return res.status(200).json({ message: "Logged out successfully" });
+}
+
+module.exports = { register, login, refresh, logout };
