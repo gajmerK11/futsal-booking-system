@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-27:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch (3 screens). Stitch MCP connected. **Owner Dashboard implementation in progress:** role-based routing done, sidebar refactor COMPLETE ✅ (role-based nav with `userNav`/`ownerNav` arrays + `.map()` + `key` prop). `DashboardHeader.jsx` updated: search bar hidden for owner, "Venue Owner" label shown, `ml-auto` push. `OwnerDashboard.jsx` wrapped in `<DashboardLayout>` ✅. **Logout feature next:** backend endpoint (`POST /auth/logout` — clear httpOnly cookie) + frontend (clear AuthContext). User will write logout controller.
+- **Status as of 2026-06-27:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch (3 screens). Stitch MCP connected. **Owner Dashboard implementation in progress:** role-based routing done, sidebar refactor COMPLETE ✅. DashboardHeader role-aware ✅. **Logout feature in progress:** backend `POST /auth/logout` COMPLETE ✅ (controller + route wired). Frontend logout COMPLETE ✅ (`AuthContext.jsx` has `logout()` — calls API with `credentials: "include"`, clears accessToken/role, navigates to `/login`; `Sidebar.jsx` wired with `onClick={logout}`). **Needs testing.** Next: build Owner Dashboard empty state UI.
 
 ---
 
@@ -289,6 +289,10 @@ refresh:
   - jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) → 403 if invalid/expired
   - jwt.sign new accessToken (15m, JWT_SECRET)
   - Return 200 + { newAccessToken }
+
+logout:
+  - res.clearCookie("refreshToken") — clears httpOnly cookie
+  - Return 200 + { message: "Logged out successfully" }
 ```
 
 ### middleware/verifyToken.js ✅
@@ -303,7 +307,7 @@ refresh:
 
 ### routes/auth.js ✅
 
-- POST /register, POST /login, POST /refresh
+- POST /register, POST /login, POST /refresh, POST /logout
 
 ### routes/user.js ✅
 
@@ -339,7 +343,9 @@ refresh:
 ### AuthContext.jsx ✅
 
 - `createContext`, `AuthProvider` with `useState("")` for accessToken + `useState("")` for role
-- Provider value: `{ accessToken, setAccessToken, role, setRole }`
+- `useNavigate()` for post-logout redirect
+- `logout()` function: `POST /auth/logout` with `credentials: "include"` → `setAccessToken(null)` + `setRole(null)` + `navigate("/login")`
+- Provider value: `{ accessToken, setAccessToken, role, setRole, logout }`
 - Exports: `AuthContext`, `AuthProvider`
 - Wraps entire app in `main.jsx`
 
@@ -360,7 +366,7 @@ refresh:
 - Pick array: `const navItems = role === "user" ? userNav : ownerNav` → `.map()` with `key={item.label}` inside `<nav>`
 - `role` from `useContext(AuthContext)`
 - Import path: `../../context/AuthContext` (two levels up from `layout/`)
-- Logout button: pill, dark→indigo hover, flex centered, logout icon + text-xs tracking-widest
+- Logout button: pill, dark→indigo hover, flex centered, logout icon + text-xs tracking-widest, `onClick={logout}` from AuthContext
 
 ### DashboardHeader.jsx ✅ COMPLETE (role-aware)
 
@@ -468,8 +474,8 @@ refresh:
    - ✅ `OwnerDashboard.jsx` wrapped in `<DashboardLayout>` — sidebar + header rendering
    - ✅ Sidebar refactor COMPLETE: role-based nav with `.map()` + `key` prop, import path fixed
    - ✅ DashboardHeader role-aware: search hidden for owner, "Venue Owner" label shown
-   - 🔧 **Logout feature next:** backend `POST /auth/logout` (clear httpOnly refreshToken cookie) + frontend (clear AuthContext accessToken/role, navigate to login)
-   - ⏭️ After logout: build Owner Dashboard empty state sections (welcome, MY VENUE empty card + ADD VENUE button, stats row all 0, empty booking table)
+   - ✅ Logout feature COMPLETE: backend `POST /auth/logout` + frontend `logout()` in AuthContext + Sidebar `onClick` wired. **Needs testing.**
+   - ⏭️ **Next:** Test logout end-to-end → build Owner Dashboard empty state sections (welcome, MY VENUE empty card + ADD VENUE button, stats row all 0, empty booking table)
 4. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
 5. Create remaining DB tables: grounds, time_slots, bookings
 6. Add `required` to all Register.jsx form fields (frontend validation cleanup)

@@ -47,7 +47,7 @@ function Sidebar() {
     },
   ];
 
-  const { role } = useContext(AuthContext);
+  const { role, logout } = useContext(AuthContext);
 
   const navItems = role === "user" ? userNav : ownerNav;
 
@@ -74,7 +74,10 @@ function Sidebar() {
 
       {/* Logout button */}
       <div className="mt-auto border-t border-outline-variant  p-6 ">
-        <button className="flex items-center justify-center gap-2 rounded-full px-6 py-2 bg-gray-900 text-white w-full uppercase text-xs font-medium tracking-widest hover:bg-indigo-600 transition-colors">
+        <button
+          className="flex items-center justify-center gap-2 rounded-full px-6 py-2 bg-gray-900 text-white w-full uppercase text-xs font-medium tracking-widest hover:bg-indigo-600 transition-colors cursor-pointer"
+          onClick={logout}
+        >
           <span className="material-symbols-outlined">logout</span>
           Logout
         </button>

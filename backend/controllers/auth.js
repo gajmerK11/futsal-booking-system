@@ -179,6 +179,10 @@ function refresh(req, res) {
 }
 
 function logout(req, res) {
+  /**
+   * 'refreshToken' here is just a string - the name of the cookie we want to clear.
+   * We are not referencing any variable, we are just telling Express: "find the cookie named 'refreshToken' in the response headers and clear it."
+   */
   res.clearCookie("refreshToken");
   return res.status(200).json({ message: "Logged out successfully" });
 }
