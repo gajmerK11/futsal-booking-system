@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-27:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch (3 screens). Stitch MCP connected. **Owner Dashboard implementation in progress:** role-based routing done, sidebar refactor COMPLETE ✅. DashboardHeader role-aware ✅. **Logout feature in progress:** backend `POST /auth/logout` COMPLETE ✅ (controller + route wired). Frontend logout COMPLETE ✅ (`AuthContext.jsx` has `logout()` — calls API with `credentials: "include"`, clears accessToken/role, navigates to `/login`; `Sidebar.jsx` wired with `onClick={logout}`). **Needs testing.** Next: build Owner Dashboard empty state UI.
+- **Status as of 2026-06-28:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch (3 screens). Stitch MCP connected. **Owner Dashboard implementation in progress:** role-based routing done, sidebar refactor COMPLETE ✅. DashboardHeader role-aware ✅. **Logout feature COMPLETE ✅ — tested end-to-end** (backend `POST /auth/logout` clears cookie, frontend calls with `credentials: "include"`, clears context, redirects to `/login`). **Sidebar active styling COMPLETE ✅** — `useLocation` + `pathname` comparison, active item gets `text-primary bg-primary-fixed`, dashboard icon gets filled style. `<a>` → `<Link>` migration done (prevents full page reload losing state). **DashboardHeader dynamic username + initials COMPLETE ✅** — `location.state.username` from login navigate, profile picture shows initials (single word → first char, two words → both initials). Next: build Owner Dashboard empty state UI.
 
 ---
 
@@ -140,6 +140,7 @@ Work done in `Register.jsx` + `backend/controllers/auth.js`:
 **Step 4 (Haversine + Controller + Route) — COMPLETE ✅ (2026-06-22):**
 
 Concepts covered + decided:
+
 - No query params needed — frontend sends `GET /venues/nearby` with Bearer token only
 - `verifyToken` middleware extracts `req.user.id` → backend fetches user lat/lon from `users` table
 - Haversine formula in raw SQL (no PostGIS) — chosen approach
@@ -150,11 +151,13 @@ Concepts covered + decided:
 - Export style: `module.exports = getNearbyVenues` (direct export, matches `controllers/user.js` pattern)
 
 Post-implementation quiz completed ✅ — user correctly answered:
+
 1. No-token request → `verifyToken.js` returns 401 "No authorization header."
 2. Null lat/lon → Haversine fails → catch block returns 500 "Internal Server Error"
 3. `$1`/`$2` parameterized queries prevent SQL injection
 
 **`routes/venues.js` — WRITTEN ✅:**
+
 ```js
 const express = require("express");
 const router = express.Router();
@@ -167,6 +170,7 @@ module.exports = router;
 ```
 
 **Algorithm decided:**
+
 ```
 1. Extract user_id from req.user.id (set by verifyToken)
 2. SELECT latitude, longitude FROM users WHERE user_id = $1
@@ -181,6 +185,7 @@ module.exports = router;
 ```
 
 **`controllers/venues.js` — COMPLETE ✅:**
+
 - Step 1: Extract `user_id` from `req.user.id`
 - Step 2: Fetch user lat/lon from `users` table
 - Step 3: Haversine subquery with parameterized `$1`/`$2` (SQL injection safe)
@@ -356,15 +361,17 @@ logout:
 - Role-based navigation: `data.role === "user"` → `/dashboard`, else → `/owner/dashboard`
 - Uses `data.role` (not context `role`) for navigate — avoids async state update bug
 
-### Sidebar.jsx — ✅ COMPLETE (role-based nav)
+### Sidebar.jsx — ✅ COMPLETE (role-based nav + active styling)
 
 - Fixed sidebar: w-64, bg-[#f5f5f4], full height, border-r border-outline-variant
 - Brand: "FUTSALBOOK" — font-extrabold, uppercase, tracking-tighter
 - **Decision: Option A — reuse single Sidebar, role-based nav items**
-- Two nav arrays: `userNav` (Dashboard, Venues, Bookings, Profile) and `ownerNav` (Dashboard, Edit Venue, Booking Requests, Profile)
+- Two nav arrays: `userNav` (Dashboard `/dashboard`, Venues `/venues`, Bookings `/bookings`, Profile `/profile`) and `ownerNav` (Dashboard `/owner/dashboard`, Edit Venue `/owner/edit-venue`, Booking Requests `/owner/booking-requests`, Profile `/owner/profile`)
 - Owner icons: `dashboard`, `storefront`, `calendar_month`, `person`
 - Pick array: `const navItems = role === "user" ? userNav : ownerNav` → `.map()` with `key={item.label}` inside `<nav>`
-- `role` from `useContext(AuthContext)`
+- **Active styling:** `useLocation()` + `pathname` comparison. Active item → `text-primary bg-primary-fixed`. Dashboard icon only → `fontVariationSettings: "'FILL' 1"` when active.
+- **`<Link to={item.href}>`** (not `<a href>`) — prevents full page reload which would lose auth state
+- `role` + `logout` from `useContext(AuthContext)`
 - Import path: `../../context/AuthContext` (two levels up from `layout/`)
 - Logout button: pill, dark→indigo hover, flex centered, logout icon + text-xs tracking-widest, `onClick={logout}` from AuthContext
 
@@ -375,7 +382,9 @@ logout:
 - Right: username span + avatar circle (`w-9 h-9 rounded-full bg-inverse-surface` with initials "AM")
 - Owner: shows "Venue Owner" label below name (inline `<span>`, not `<p>` inside `<span>`)
 - Owner: `ml-auto` on right section pushes username/avatar right when search bar hidden
-- Hardcoded "ALEX MORGAN" — will be dynamic later
+- **Dynamic username:** `location.state.username` via `useLocation()` — passed from Login.jsx `navigate()` state
+- **Dynamic initials:** `username.split(" ")` → 1 word: first char, 2+ words: first char of each word. Displayed in avatar circle.
+- ⚠️ Known issue: `location.state` is null on page refresh (state lives in session history, not URL) — will crash. Needs fallback handling later.
 
 ### DashboardLayout.jsx ✅ COMPLETE
 
@@ -429,6 +438,7 @@ logout:
 **3 screens finalized** (all others hidden/cleaned):
 
 #### Screen 1: "Owner Dashboard - Balanced Proportions" (main state, has data)
+
 - **Sidebar nav:** Dashboard (active), Edit Venue, Booking Requests, Profile, Logout
 - **User profile** in sidebar: avatar + name + "Venue Owner" label
 - **Welcome section:** "Hello, {name}" + tagline "Manage your venues. Approve bookings. Grow."
@@ -439,12 +449,14 @@ logout:
   - Status badges: PENDING (yellow), APPROVED (green), REJECTED (red)
 
 #### Screen 2: "Owner Dashboard - Empty State" (new owner, no venues yet)
+
 - Same sidebar + welcome as Screen 1
 - MY VENUE card → "+ ADD VENUE" button + empty state message: "Get started by listing your futsal facility to start receiving bookings."
 - Stats all show **0**
 - Booking table → "No booking requests yet" + "Once you add a venue and it goes live, customer bookings will appear here."
 
 #### Screen 3: "Add Venue - Refined Layout & Pricing" (add venue form)
+
 - **Breadcrumb:** Dashboard > Add Venue
 - **Section 1 — General Information:**
   - Venue Name (text input)
@@ -474,8 +486,10 @@ logout:
    - ✅ `OwnerDashboard.jsx` wrapped in `<DashboardLayout>` — sidebar + header rendering
    - ✅ Sidebar refactor COMPLETE: role-based nav with `.map()` + `key` prop, import path fixed
    - ✅ DashboardHeader role-aware: search hidden for owner, "Venue Owner" label shown
-   - ✅ Logout feature COMPLETE: backend `POST /auth/logout` + frontend `logout()` in AuthContext + Sidebar `onClick` wired. **Needs testing.**
-   - ⏭️ **Next:** Test logout end-to-end → build Owner Dashboard empty state sections (welcome, MY VENUE empty card + ADD VENUE button, stats row all 0, empty booking table)
+   - ✅ Logout feature COMPLETE + TESTED end-to-end ✅
+   - ✅ Sidebar active styling COMPLETE: `useLocation` + pathname match, `<Link>` migration, filled dashboard icon
+   - ✅ DashboardHeader dynamic username + initials COMPLETE
+   - ⏭️ **Next:** Build Owner Dashboard empty state sections (welcome, MY VENUE empty card + ADD VENUE button, stats row all 0, empty booking table)
 4. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
 5. Create remaining DB tables: grounds, time_slots, bookings
 6. Add `required` to all Register.jsx form fields (frontend validation cleanup)

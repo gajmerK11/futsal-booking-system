@@ -1,25 +1,26 @@
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
+import { useLocation, Link } from "react-router-dom";
 function Sidebar() {
   const userNav = [
     {
       label: "Dashboard",
-      href: "#",
+      href: "/dashboard",
       icon: "dashboard",
     },
     {
       label: "Venues",
-      href: "#",
+      href: "/venues",
       icon: "stadium",
     },
     {
       label: "Bookings",
-      href: "#",
+      href: "/bookings",
       icon: "event_available",
     },
     {
       label: "Profile",
-      href: "#",
+      href: "/profile",
       icon: "person",
     },
   ];
@@ -27,22 +28,22 @@ function Sidebar() {
   const ownerNav = [
     {
       label: "Dashboard",
-      href: "#",
+      href: "/owner/dashboard",
       icon: "dashboard",
     },
     {
       label: "Edit Venue ",
-      href: "#",
+      href: "/owner/edit-venue",
       icon: "storefront",
     },
     {
       label: "Booking Requests ",
-      href: "#",
+      href: "/owner/booking-requests",
       icon: "calendar_month",
     },
     {
       label: "Profile",
-      href: "#",
+      href: "/owner/profile",
       icon: "person",
     },
   ];
@@ -50,6 +51,9 @@ function Sidebar() {
   const { role, logout } = useContext(AuthContext);
 
   const navItems = role === "user" ? userNav : ownerNav;
+
+  const location = useLocation();
+  const pathname = location.pathname;
 
   return (
     <aside className="fixed inset-y-0 left-0 w-64 bg-[#f5f5f4] border-r border-outline-variant hidden md:flex flex-col">
@@ -61,14 +65,23 @@ function Sidebar() {
       {/* Nav links */}
       <nav className="px-4 space-y-2">
         {navItems.map((item) => (
-          <a
-            href={item.href}
-            className="flex items-center gap-4 px-4 py-3"
+          <Link
+            to={item.href}
+            className={`flex items-center gap-4 px-4 py-3 rounded-xl uppercase text-xs font-semibold tracking-widest hover:text-primary hover:bg-surface-container text-on-surface-variant ${item.href === pathname ? "text-primary bg-primary-fixed" : ""}`}
             key={item.label}
           >
-            <span className="material-symbols-outlined">{item.icon}</span>
+            <span
+              className="material-symbols-outlined"
+              style={
+                item.icon === "dashboard" && item.href === pathname
+                  ? { fontVariationSettings: "'FILL' 1" }
+                  : {}
+              }
+            >
+              {item.icon}
+            </span>
             {item.label}
-          </a>
+          </Link>
         ))}
       </nav>
 

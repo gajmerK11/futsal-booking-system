@@ -1,8 +1,19 @@
 import { useContext } from "react";
+import { useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 
 function DashboardHeader() {
   const { role } = useContext(AuthContext);
+  const location = useLocation();
+  // Incase you're wondering where this 'username' comes from, (reminder: location object doesn't have username by default. we have put it here ourself.) it comes from 'state' data we have passed into 'navigate' in Login.jsx
+  const { username } = location.state;
+
+  // Splitting for profile picture
+  const splittedWords = username.split(" ");
+  const initials =
+    splittedWords.length === 1
+      ? splittedWords[0].charAt(0)
+      : splittedWords[0].charAt(0) + splittedWords[1].charAt(0);
   return (
     <header className="sticky top-0 bg-surface-container-lowest border-b border-outline-variant px-6 py-4">
       <div className="flex justify-between items-center">
@@ -22,7 +33,7 @@ function DashboardHeader() {
         >
           {/* username */}
           <span className="font-semibold text-sm text-on-surface flex flex-col">
-            ALEX MORGAN
+            {username}
             {role !== "user" && (
               <span className="text-xs text-on-surface-variant text-right">
                 Venue Owner
@@ -31,7 +42,7 @@ function DashboardHeader() {
           </span>
           {/* profile-picture */}
           <div className="w-9 h-9 rounded-full bg-inverse-surface text-white flex items-center justify-center text-xs font-bold">
-            AM
+            {initials}
           </div>
         </div>
       </div>
