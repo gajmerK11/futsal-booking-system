@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-28:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch (3 screens). Stitch MCP connected. **Owner Dashboard implementation in progress:** role-based routing done, sidebar refactor COMPLETE ✅. DashboardHeader role-aware ✅. **Logout feature COMPLETE ✅ — tested end-to-end** (backend `POST /auth/logout` clears cookie, frontend calls with `credentials: "include"`, clears context, redirects to `/login`). **Sidebar active styling COMPLETE ✅** — `useLocation` + `pathname` comparison, active item gets `text-primary bg-primary-fixed`, dashboard icon gets filled style. `<a>` → `<Link>` migration done (prevents full page reload losing state). **DashboardHeader dynamic username + initials COMPLETE ✅** — `location.state.username` from login navigate, profile picture shows initials (single word → first char, two words → both initials). Next: build Owner Dashboard empty state UI.
+- **Status as of 2026-06-28:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch. Stitch MCP connected. **Owner Dashboard empty state — IN PROGRESS:** Welcome section ✅, MY VENUE empty card ✅ (dashed border card, icon circle, "Add Your First Venue" title, "+ ADD VENUE" button). **Design change:** removed 3 stat cards — replaced with two tables: "Today's Booked Slots" + "Today's Available Slots" (more actionable for owner). Tables deferred until venue exists. **Next: Add Venue form design.**
 
 ---
 
@@ -239,7 +239,7 @@ futsal-booking-system/
 │   │   │   ├── Login.jsx     ← complete ✅ (role-based navigate: user→/dashboard, owner→/owner/dashboard)
 │   │   │   ├── Register.jsx  ← complete ✅
 │   │   │   ├── Dashboard.jsx ← in progress (layout done, main content pending)
-│   │   │   └── OwnerDashboard.jsx ← placeholder created ✅ (empty state UI next)
+│   │   │   └── OwnerDashboard.jsx ← empty state UI in progress (welcome ✅, MY VENUE card ✅, tables pending)
 │   │   ├── context/
 │   │   │   └── AuthContext.jsx ← createContext + AuthProvider + useState(accessToken, role) ✅
 │   │   ├── App.jsx          ← Routes: /login, /register, /dashboard, /owner/dashboard, * → /login
@@ -448,12 +448,13 @@ logout:
   - Columns: Player Name | Venue | Ground | Date | Time Slot | Status
   - Status badges: PENDING (yellow), APPROVED (green), REJECTED (red)
 
-#### Screen 2: "Owner Dashboard - Empty State" (new owner, no venues yet)
+#### Screen 2: "Owner Dashboard - Simplified Empty State Schedule" (new owner, no venues yet)
 
 - Same sidebar + welcome as Screen 1
-- MY VENUE card → "+ ADD VENUE" button + empty state message: "Get started by listing your futsal facility to start receiving bookings."
-- Stats all show **0**
-- Booking table → "No booking requests yet" + "Once you add a venue and it goes live, customer bookings will appear here."
+- MY VENUE card → dashed border card, icon circle (add_business), "Add Your First Venue" title, subtitle, "+ ADD VENUE" button
+- **Design change (2026-06-28):** Removed 3 stat cards. Replaced with two tables:
+  - "TODAY'S BOOKED SLOTS" — empty state: calendar icon, "Your journey starts here.", "Once your venue is live, player bookings will appear right here."
+  - "TODAY'S AVAILABLE SLOTS" — empty state: soccer icon, "Ready to kick off?", "Add your venue to start generating available slots for local players."
 
 #### Screen 3: "Add Venue - Refined Layout & Pricing" (add venue form)
 
@@ -489,7 +490,10 @@ logout:
    - ✅ Logout feature COMPLETE + TESTED end-to-end ✅
    - ✅ Sidebar active styling COMPLETE: `useLocation` + pathname match, `<Link>` migration, filled dashboard icon
    - ✅ DashboardHeader dynamic username + initials COMPLETE
-   - ⏭️ **Next:** Build Owner Dashboard empty state sections (welcome, MY VENUE empty card + ADD VENUE button, stats row all 0, empty booking table)
+   - ✅ Welcome section COMPLETE — greeting + subtitle, matches user Dashboard pattern
+   - ✅ MY VENUE empty card COMPLETE — dashed border, icon circle, title, subtitle, "+ ADD VENUE" button
+   - ✅ Design decision: removed stat cards, replaced with two tables (Today's Booked/Available Slots) — deferred until venue exists
+   - ⏭️ **Next:** Add Venue form design + implementation
 4. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
 5. Create remaining DB tables: grounds, time_slots, bookings
 6. Add `required` to all Register.jsx form fields (frontend validation cleanup)

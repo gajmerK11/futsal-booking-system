@@ -59,7 +59,7 @@ function Dashboard() {
   }, []);
   return (
     <DashboardLayout>
-      <main className="p-8 max-w-7xl mx-auto">
+      <main className="p-8">
         <section>
           <h1 className="text-display-lg font-extrabold tracking-tight text-on-surface">
             {message}

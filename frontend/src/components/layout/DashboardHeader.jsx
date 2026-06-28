@@ -18,7 +18,7 @@ function DashboardHeader() {
     <header className="sticky top-0 bg-surface-container-lowest border-b border-outline-variant px-6 py-4">
       <div className="flex justify-between items-center">
         {/* Search bar */}
-        <div className={`relative ml-4 ${role === "user" ? "" : "hidden"}`}>
+        <div className={`relative ${role === "user" ? "" : "hidden"}`}>
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
             search
           </span>
