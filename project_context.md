@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-28:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch. Stitch MCP connected. **Owner Dashboard empty state — IN PROGRESS:** Welcome section ✅, MY VENUE empty card ✅ (dashed border card, icon circle, "Add Your First Venue" title, "+ ADD VENUE" button). **Design change:** removed 3 stat cards — replaced with two tables: "Today's Booked Slots" + "Today's Available Slots" (more actionable for owner). Tables deferred until venue exists. **Next: Add Venue form design.**
+- **Status as of 2026-06-30:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch. **Nested routing COMPLETE** ✅. **Blank page bug FIXED** ✅ — `username` moved from `location.state` to `AuthContext` (`useState("")`), `DashboardHeader` + `OwnerDashboard` now read from context. **Add Venue form — IN PROGRESS:** placeholder exists, form sections pending. **Next session:** build `backend/utils/generateTokens.js` helper (industry pattern), wire auto-login in `register` controller, add `from` to AuthContext, show "Welcome onboard" on first register → dashboard nav.
 
 ---
 
@@ -235,14 +235,15 @@ futsal-booking-system/
 │   │   │   ├── layout/
 │   │   │   │   ├── Sidebar.jsx         ← complete ✅
 │   │   │   │   ├── DashboardHeader.jsx ← complete ✅ (search bar + username/avatar)
-│   │   │   │   └── DashboardLayout.jsx ← complete ✅ (Sidebar + Header + children)
+│   │   │   │   └── DashboardLayout.jsx ← complete ✅ (Sidebar + Header + <Outlet />)
 │   │   │   ├── Login.jsx     ← complete ✅ (role-based navigate: user→/dashboard, owner→/owner/dashboard)
 │   │   │   ├── Register.jsx  ← complete ✅
 │   │   │   ├── Dashboard.jsx ← in progress (layout done, main content pending)
-│   │   │   └── OwnerDashboard.jsx ← empty state UI in progress (welcome ✅, MY VENUE card ✅, tables pending)
+│   │   │   ├── OwnerDashboard.jsx ← empty state UI complete ✅ (welcome + MY VENUE card, ADD VENUE navigates to /owner/add-venue)
+│   │   │   └── AddVenue.jsx      ← IN PROGRESS (placeholder created, form sections pending)
 │   │   ├── context/
 │   │   │   └── AuthContext.jsx ← createContext + AuthProvider + useState(accessToken, role) ✅
-│   │   ├── App.jsx          ← Routes: /login, /register, /dashboard, /owner/dashboard, * → /login
+│   │   ├── App.jsx          ← Routes: /login, /register, /dashboard, /owner (nested: index→OwnerDashboard, add-venue→AddVenue), * → /login
 │   │   ├── main.jsx         ← BrowserRouter + AuthProvider wraps App
 │   │   ├── index.css        ← @import tailwindcss, Inter font, @theme tokens, .input-animated, .btn-fill
 │   │   └── App.css          ← empty
@@ -382,14 +383,13 @@ logout:
 - Right: username span + avatar circle (`w-9 h-9 rounded-full bg-inverse-surface` with initials "AM")
 - Owner: shows "Venue Owner" label below name (inline `<span>`, not `<p>` inside `<span>`)
 - Owner: `ml-auto` on right section pushes username/avatar right when search bar hidden
-- **Dynamic username:** `location.state.username` via `useLocation()` — passed from Login.jsx `navigate()` state
+- **Dynamic username:** `useContext(AuthContext)` — set in AuthContext via `setUsername(data.username)` after login. No `location.state` dependency.
 - **Dynamic initials:** `username.split(" ")` → 1 word: first char, 2+ words: first char of each word. Displayed in avatar circle.
-- ⚠️ Known issue: `location.state` is null on page refresh (state lives in session history, not URL) — will crash. Needs fallback handling later.
 
 ### DashboardLayout.jsx ✅ COMPLETE
 
 - Imports Sidebar + DashboardHeader
-- Returns: `<div>` → `<Sidebar />` + `<div className="pl-64 bg-surface min-h-screen">` → `<DashboardHeader />` + `{children}`
+- Returns: `<div>` → `<Sidebar />` + `<div className="pl-64 bg-surface min-h-screen">` → `<DashboardHeader />` + `<Outlet />` (replaced `{children}` for nested routing)
 - `pl-64` offsets content from fixed sidebar
 - `bg-surface min-h-screen` here (not on `<main>`) — wrapper spans full viewport height so background tint covers entire content area; header's own white bg sits on top
 
@@ -493,7 +493,13 @@ logout:
    - ✅ Welcome section COMPLETE — greeting + subtitle, matches user Dashboard pattern
    - ✅ MY VENUE empty card COMPLETE — dashed border, icon circle, title, subtitle, "+ ADD VENUE" button
    - ✅ Design decision: removed stat cards, replaced with two tables (Today's Booked/Available Slots) — deferred until venue exists
-   - ⏭️ **Next:** Add Venue form design + implementation
+   - ✅ Nested routing: DashboardLayout as parent route with `<Outlet />`, OwnerDashboard as index, AddVenue at `/owner/add-venue`
+   - ✅ ADD VENUE button wired: `onClick={() => navigate("/owner/add-venue")}`
+   - ✅ AddVenue.jsx created (placeholder)
+   - ✅ Blank page bug FIXED — `username` moved to AuthContext, no more `location.state` dependency
+   - ✅ `DashboardHeader` reads `username` from `useContext(AuthContext)` — works on direct URL, refresh, button nav
+   - ✅ `OwnerDashboard` reads `username` from `useContext(AuthContext)`
+   - ⏭️ **Next:** `backend/utils/generateTokens.js` helper → auto-login after register → `from` in AuthContext → "Welcome onboard" message → then Add Venue form sections
 4. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
 5. Create remaining DB tables: grounds, time_slots, bookings
 6. Add `required` to all Register.jsx form fields (frontend validation cleanup)

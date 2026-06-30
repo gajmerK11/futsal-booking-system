@@ -1,12 +1,8 @@
 import { useContext } from "react";
-import { useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 
 function DashboardHeader() {
-  const { role } = useContext(AuthContext);
-  const location = useLocation();
-  // Incase you're wondering where this 'username' comes from, (reminder: location object doesn't have username by default. we have put it here ourself.) it comes from 'state' data we have passed into 'navigate' in Login.jsx
-  const { username } = location.state;
+  const { role, username } = useContext(AuthContext);
 
   // Splitting for profile picture
   const splittedWords = username.split(" ");

@@ -8,7 +8,11 @@ const AuthContext = createContext();
 function AuthProvider({ children }) {
   const [accessToken, setAccessToken] = useState("");
   const [role, setRole] = useState("");
+
+  // This is used here to navigate user to login page when logged out, not for 'CONTEXT' purpose
   const navigate = useNavigate();
+
+  const [username, setUsername] = useState("Owner");
 
   // Logout function
   async function logout() {
@@ -26,7 +30,15 @@ function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ accessToken, setAccessToken, role, setRole, logout }}
+      value={{
+        accessToken,
+        setAccessToken,
+        role,
+        setRole,
+        logout,
+        username,
+        setUsername,
+      }}
     >
       {children}
     </AuthContext.Provider>

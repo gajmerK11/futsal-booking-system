@@ -28,7 +28,7 @@ function Sidebar() {
   const ownerNav = [
     {
       label: "Dashboard",
-      href: "/owner/dashboard",
+      href: "/owner",
       icon: "dashboard",
     },
     {

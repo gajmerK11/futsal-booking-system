@@ -12,8 +12,8 @@ function Login() {
   const [loginMessage, setLoginMessage] = useState("");
 
   // Declaring context variable
-  // It gets 'setAccessToken' and 'setRole' from auth context to store token and role after Login
-  const { setAccessToken, setRole } = useContext(AuthContext);
+  // It gets 'setAccessToken','setRole' and 'setUsername' from auth context to store token, role and username after Login
+  const { setAccessToken, setRole, setUsername } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -36,9 +36,12 @@ function Login() {
       setAccessToken(data.accessToken);
       // stores role in react's context variable
       setRole(data.role);
+      // stores username in react's context variable
+      setUsername(data.username);
+
       setLoginMessage(data.message);
       // 'useNavigate' allows you to pass data along with navigation using a second argument called 'state'
-      navigate(data.role === "user" ? "/dashboard" : "/owner/dashboard", {
+      navigate(data.role === "user" ? "/dashboard" : "/owner", {
         state: {
           username: data.username,
           from: "login",
