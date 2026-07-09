@@ -12,7 +12,7 @@ type: project
 - **Deadline:** June 19, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
-- **Status as of 2026-06-30:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch. **Nested routing COMPLETE** ✅. **Blank page bug FIXED** ✅ — `username` moved from `location.state` to `AuthContext` (`useState("")`), `DashboardHeader` + `OwnerDashboard` now read from context. **Add Venue form — IN PROGRESS:** placeholder exists, form sections pending. **Next session:** build `backend/utils/generateTokens.js` helper (industry pattern), wire auto-login in `register` controller, add `from` to AuthContext, show "Welcome onboard" on first register → dashboard nav.
+- **Status as of 2026-07-09:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch. **Nested routing COMPLETE** ✅. **Blank page bug FIXED** ✅. **`generateToken.js` helper COMPLETE** ✅ — `backend/utils/generateToken.js` extracts token logic (accessToken + refreshToken + cookie) into shared function `generateToken(userId, role, res)`. `login` controller refactored to use it. `register` controller now calls `generateToken` + returns `{ message, accessToken, username, role }` (auto-login pattern). **Next:** wire frontend `Register.jsx` to handle new register response (store context, navigate to dashboard), add `from` to AuthContext, show "Welcome onboard" message.
 
 ---
 
@@ -279,7 +279,8 @@ register:
   - Check duplicate email → 409
   - bcrypt.hash(password, 10)
   - INSERT INTO users RETURNING user_id, username, email, role
-  - Return 201 + { message, user }
+  - generateToken(user.user_id, user.role, res) → accessToken
+  - Return 201 + { message, accessToken, username, role }
 
 login:
   - Validate input → 400
@@ -499,7 +500,10 @@ logout:
    - ✅ Blank page bug FIXED — `username` moved to AuthContext, no more `location.state` dependency
    - ✅ `DashboardHeader` reads `username` from `useContext(AuthContext)` — works on direct URL, refresh, button nav
    - ✅ `OwnerDashboard` reads `username` from `useContext(AuthContext)`
-   - ⏭️ **Next:** `backend/utils/generateTokens.js` helper → auto-login after register → `from` in AuthContext → "Welcome onboard" message → then Add Venue form sections
+   - ✅ `backend/utils/generateToken.js` COMPLETE — `generateToken(userId, role, res)` generates accessToken (15m) + refreshToken (7d) + sets httpOnly cookie, returns accessToken
+   - ✅ `login` controller refactored — inline token logic replaced with `generateToken` call
+   - ✅ `register` controller updated — calls `generateToken` after INSERT, returns `{ message, accessToken, username, role }` (auto-login response shape matches login)
+   - ⏭️ **Next:** `Register.jsx` — read new response fields, call `setAccessToken` + `setRole` + `setUsername` + `setFrom("register")`, navigate to dashboard. Add `from` to AuthContext. Show "Welcome onboard" vs "Hello" ternary in `OwnerDashboard` + `Dashboard`.
 4. Resume frontend: venue cards section (wire to real nearby-venues data, show distance in km) + bookings table
 5. Create remaining DB tables: grounds, time_slots, bookings
 6. Add `required` to all Register.jsx form fields (frontend validation cleanup)

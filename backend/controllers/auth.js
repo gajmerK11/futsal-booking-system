@@ -1,6 +1,7 @@
 const pool = require("../models/db.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { generateToken } = require("../utils/generateToken.js");
 
 // This function is for the logic of '/register' route
 async function register(req, res) {
@@ -64,11 +65,16 @@ async function register(req, res) {
       ],
     );
 
+    const user = result.rows[0];
+    const accessToken = generateToken(user.user_id, user.role, res);
+
     // returning response to frontend
     return res.status(201).json({
       message: "User registered successfully.",
       // Why here result.rows[0] ?? Look at notion
-      user: result.rows[0],
+      accessToken,
+      username: user.username,
+      role: user.role,
     });
   } catch (error) {
     console.log(error);
@@ -109,28 +115,11 @@ async function login(req, res) {
     }
     // ------------------------------------------------
 
-    // generating access token which is a jwt token ('jwt.sign()' is the method that both generates and signs the token in one step)
-    const accessToken = jwt.sign(
-      { id: user.user_id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" },
-    );
-    // generating refresh token
-    const refreshToken = jwt.sign(
-      { id: user.user_id, role: user.role },
-      process.env.REFRESH_TOKEN_SECRET,
-      { expiresIn: "7d" },
-    );
-
-    // sets cookie in response headers
-    // here we don't do 'return' because it doesn't send the reponse - it just adds the cookie to the response headers
-    // the actual response is sent by line after this block
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true, // JS cannot read this cookie (XSS protection)
-      secure: false, // for development only (true in production (HTTPS only))
-      sameSite: "strict", // blocks cross-site requests (CSRF protection)
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
-    });
+    /**
+     * 'generateToken' is a helper function here defined in utils
+     * Since it returns accessToken so we have grabbed it here in variable 'accessToken' to return it in response as done in res.status(200).json()
+     */
+    const accessToken = generateToken(user.user_id, user.role, res);
 
     // sends response
     // i.e.
