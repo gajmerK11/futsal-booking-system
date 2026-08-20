@@ -8,7 +8,7 @@ type: project
 
 ## Project Overview
 
-- **Goal (UPDATED 2026-08-20):** Land a Node.js backend developer job — external, not just internal role switch. This project = portfolio centerpiece, must be full production-level quality recruiters can't ignore.
+- **Goal (UPDATED 2026-08-20):** Land a full-stack (Node.js backend + React frontend) developer job — external, not just internal role switch. This project = portfolio centerpiece, must be full production-level quality recruiters can't ignore. Full-stack target means frontend gets same rigor as backend — not "just enough React to consume the API."
 - **Deadline:** ~3 months from 2026-08-20 → November 20, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Job-hunt entry piece. Two parts: (1) React+Node.js web app — production-grade, (2) WordPress marketing site consuming web app REST APIs.
@@ -39,6 +39,17 @@ User wants complete + deep Node.js mastery now, not just "enough to ship." Two t
 Trigger for deep-dive: either user asks directly, or mentor notices a shallow spot while building and flags it.
 
 **Priority order decided (2026-08-20):** Finish features first, harden after. Order: Register.jsx auto-login wiring → AddVenue form → remaining DB tables (grounds, time_slots, bookings) → full booking flow → THEN production hardening pass (tests, logging, validation layer, deployment, CI, README). Rationale: avoid hardening code whose shape will still change.
+
+### TypeScript Pivot (decided 2026-08-20 — SUPERSEDES priority order above, temporarily)
+
+Goal: land Node.js backend job in 3 months, become strong JS/TS/Node dev. Node job roles require TypeScript — pivoting now.
+
+- **Scope:** Full stack — backend (Node/Express → .ts) AND frontend (React → .tsx)
+- **Migration approach:** Convert EXISTING JS code to TS first, file-by-file, BEFORE resuming new features. User learns TS on code they already understand (auth.js, routes, controllers, middleware, db.js, then React components), then resumes remaining features (Register.jsx fix, AddVenue, DB tables, bookings) written fresh in TS.
+- **Revised order:** TS backend setup (tsconfig, ts-node/nodemon, @types packages) → migrate backend files one-by-one → TS frontend setup (Vite TS template config, tsx) → migrate frontend components one-by-one → THEN resume feature work in TS → THEN production hardening pass.
+- Deep Node.js track (event loop, streams, etc.) continues in parallel, now through a TS lens where relevant.
+
+**Docker/K8s decision (2026-08-20):** Docker — hands-on, real part of production hardening pass (Dockerfile for backend, docker-compose with Postgres). Kubernetes — conceptual-only, NOT implemented in project (overkill for solo portfolio app); cover via a separate reading/concept session so user isn't blank on it in interviews, no hands-on cluster work planned.
 
 ### NEW Learning Framework (added 2026-06-13) — follow for EVERY implementation, no matter how small:
 
