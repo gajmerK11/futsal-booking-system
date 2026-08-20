@@ -13,7 +13,55 @@ type: project
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
 - **Why:** Job-hunt entry piece. Two parts: (1) React+Node.js web app — production-grade, (2) WordPress marketing site consuming web app REST APIs.
 - **Production-level bar (NEW):** beyond "it works" — testing, proper error handling/logging, security hardening, deployment (real host, not localhost), CI, README worthy of a recruiter's first click, env/config discipline, rate limiting, input validation everywhere, possibly Docker. Deep Node.js track (below) feeds this — recruiters probe internals in interviews too.
-- **Status as of 2026-07-09:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch. **Nested routing COMPLETE** ✅. **Blank page bug FIXED** ✅. **`generateToken.js` helper COMPLETE** ✅ — `backend/utils/generateToken.js` extracts token logic (accessToken + refreshToken + cookie) into shared function `generateToken(userId, role, res)`. `login` controller refactored to use it. `register` controller now calls `generateToken` + returns `{ message, accessToken, username, role }` (auto-login pattern). **Next:** wire frontend `Register.jsx` to handle new register response (store context, navigate to dashboard), add `from` to AuthContext, show "Welcome onboard" message.
+- **Status as of 2026-07-09:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch. **Nested routing COMPLETE** ✅. **Blank page bug FIXED** ✅. **`generateToken.js` helper COMPLETE** ✅ — `backend/utils/generateToken.js` extracts token logic (accessToken + refreshToken + cookie) into shared function `generateToken(userId, role, res)`. `login` controller refactored to use it. `register` controller now calls `generateToken` + returns `{ message, accessToken, username, role }` (auto-login pattern). Frontend `Register.jsx` wiring for auto-login response — PAUSED, superseded by TypeScript pivot below.
+
+---
+
+## TypeScript Migration — IN PROGRESS (started 2026-08-20)
+
+**Why:** User now jobless, pivoting to land external full-stack (Node+React) job in ~3 months (by ~Nov 20, 2026). This project is portfolio centerpiece — must be production-grade, TS full-stack (job market requirement). Full context/history of this pivot lives in Claude's persistent memory (`user_profile.md`, `project_context.md` in memory dir) — key decisions duplicated here for repo-visible record:
+
+- Scope: full stack (backend .ts + frontend .tsx)
+- Approach: convert EXISTING code file-by-file, in-place (rename .js→.ts, same folder, `git mv` style) — NOT a separate parallel folder
+- Module system: `commonjs` (matches existing `require`/`module.exports` code, package.json `"type": "commonjs"`) — not ESM, to reduce simultaneous-change friction
+- Order: backend TS setup → migrate backend files one-by-one → frontend TS setup → migrate frontend components → resume paused features (Register.jsx, AddVenue, DB tables, bookings) in TS → production hardening pass (tests, logging, Docker, CI, README)
+- Docker: planned for hardening phase (Dockerfile + docker-compose w/ Postgres). Kubernetes: conceptual-only, not implemented in project.
+- **User works 100% hands-on** — Claude/mentor never runs commands or edits project files directly, only instructs; user executes everything themselves (installs, file creation, running tsc, etc.)
+
+### Backend TS setup — COMPLETE ✅
+
+- Installed: `typescript`, `@types/node`, `@types/express`, `@types/cors`, `@types/cookie-parser`, `@types/bcrypt`, `@types/jsonwebtoken`, `@types/pg`, `ts-node-dev`, `zod`
+- `backend/tsconfig.json` configured: `rootDir: "./src"`, `outDir: "./dist"`, `module: "commonjs"`, `target: "es2022"`, `types: ["node"]`, `strict: true` kept, `verbatimModuleSyntax` REMOVED (conflicted with commonjs+import/export), jsx line removed (backend-only config)
+- `package.json` scripts added: `"build": "tsc"`, `"dev": "ts-node-dev --respawn src/index.ts"` (index.ts doesn't exist yet — expected to error until index.js migrated)
+- Folder structure: `backend/src/` created, mirrors old structure (`src/models/`, `src/middleware/`, will add `src/controllers/`, `src/routes/`, `src/config/`, `src/types/` etc. as migration proceeds)
+
+### Files migrated so far
+
+1. **`src/config/env.ts`** — NEW file (wasn't in original JS codebase). Uses `zod` to validate all 7 env vars (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `REFRESH_TOKEN_SECRET`) at startup — fails fast with clear error if any missing/malformed, instead of silent `undefined` bugs later. All string fields use `.min(1)` (no empty strings allowed), `DB_PORT` uses `z.coerce.number().positive()`. Exports typed `env` object — replaces all `process.env.X` usage across the codebase going forward.
+2. **`src/models/db.ts`** — COMPLETE ✅. `require`→`import`, `module.exports`→`export default`, uses `env` from `env.ts` (no more manual `Number()` cast, no direct `process.env` access).
+3. **`src/middleware/verifyToken.ts`** — IN PROGRESS. Converted `require`→`import`, `module.exports`→`export default`, added `Request`/`Response`/`NextFunction` types from `"express"` (initial mistake: only imported `NextFunction`, causing TS to silently fall back to unrelated global browser `Request`/`Response` types — root-caused and fixed). Added guard for `token` possibly `undefined` (surfaced by `noUncheckedIndexedAccess` tsconfig flag catching a real edge case: malformed `Authorization` header). **Remaining:** `req.user = decoded` errors — TS's `Request` type doesn't have a `.user` field (Express's own types don't know about this app's custom convention). Fix in progress: declaration merging via `backend/src/types/express.d.ts` + a dedicated `backend/src/types/jwt.ts` exporting `UserPayload` interface (`{ id: number; role: "user" | "owner" }`, matches actual `jwt.sign()` payload shape in `generateToken.js`) — NOT YET CREATED, next action. Also unresolved: `jwt.verify()` return type (`string | JwtPayload`) likely won't directly assign to `req.user: UserPayload` — expected next compiler error, not yet hit.
+
+### Key TS concepts taught so far (for continuity)
+
+- Why `.ts` needs compiling to `.js` (nothing runs `.ts` directly) — `tsconfig.json` basics (`rootDir`/`outDir`/`target`/`module`)
+- `strict: true` — bundle of flags, `strictNullChecks` is the big one (catches the earlier `data.newAccessToken` bug class at compile time)
+- `verbatimModuleSyntax` vs commonjs module output — why they conflicted
+- `process.env.X` always `string | undefined` — needs casting/validation at the boundary
+- Why validate (not just cast) env vars — "fail fast," `zod` schema pattern, `z.coerce.number()`
+- `npx tsc --noEmit` — why run it repeatedly during migration specifically (checks ALL `.ts` files matching tsconfig, not just what's currently wired/imported — unlike running the app itself)
+- `noUncheckedIndexedAccess` — array/object index access always possibly `undefined`, catches real bugs (not just type-checker noise)
+- Declaration merging — how to add custom fields (`req.user`) to a third-party library's types (Express) without editing the library itself; industry-standard pattern, not a hack; consolidate ALL custom `req` fields into ONE interface block, not one file per field
+- Difference between annotating a variable with an existing type (`req: Request`) vs. defining/extending that type's actual shape
+
+### Immediately next
+
+1. Create `backend/src/types/jwt.ts` (`UserPayload` interface) + `backend/src/types/express.d.ts` (declaration merging for `req.user`)
+2. Finish `verifyToken.ts` — resolve `jwt.verify()` return type vs `UserPayload` assignment
+3. Continue backend migration in order: `controllers/user.js` (small) → `controllers/auth.js` (bigger, most logic) → `utils/generateToken.js` (reuse `UserPayload` type here too) → `routes/*.js` → `index.js` (last — this is what makes `npm run dev` actually work again)
+4. Frontend TS setup (Vite → tsx) once backend migration done
+5. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS
+
+---
 
 ---
 

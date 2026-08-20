@@ -1,6 +1,8 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
+import { env } from "../config/env";
+import { Request, Response, NextFunction } from "express";
 
-function verifyToken(req, res, next) {
+function verifyToken(req: Request, res: Response, next: NextFunction) {
   // Step-1: Reading 'Authorization' header from request header
   const authorizationHeader = req.get("Authorization");
 
@@ -12,9 +14,14 @@ function verifyToken(req, res, next) {
   // Since we need only token part from the header value (which looks like this "Bearer eyJhbGciOiJIUzI1NiJ9" - a string), we are spliting it using split() function - a js function to split string
   const token = authorizationHeader.split(" ")[1];
 
+  if (!token)
+    return res.status(401).json({
+      message: "Malformed authorization header.",
+    });
+
   // Step-3: Verifying token (jwt.verify)
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.JWT_SECRET);
     // attching the jwt payload to request so controllers on protected routes know who made the request
     req.user = decoded;
     // this passes request to the route (middleware standard)
@@ -25,4 +32,4 @@ function verifyToken(req, res, next) {
   }
 }
 
-module.exports = verifyToken;
+export default verifyToken;
