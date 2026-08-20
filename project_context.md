@@ -8,10 +8,11 @@ type: project
 
 ## Project Overview
 
-- **Goal:** Master backend development. Proof-of-work for backend role switch at current company.
-- **Deadline:** June 19, 2026
+- **Goal (UPDATED 2026-08-20):** Land a Node.js backend developer job — external, not just internal role switch. This project = portfolio centerpiece, must be full production-level quality recruiters can't ignore.
+- **Deadline:** ~3 months from 2026-08-20 → November 20, 2026
 - **Stack:** React (Vite) frontend + Node.js/Express backend + PostgreSQL database
-- **Why:** Career switch proof-of-work. Two parts: (1) React+Node.js web app, (2) WordPress marketing site consuming web app REST APIs.
+- **Why:** Job-hunt entry piece. Two parts: (1) React+Node.js web app — production-grade, (2) WordPress marketing site consuming web app REST APIs.
+- **Production-level bar (NEW):** beyond "it works" — testing, proper error handling/logging, security hardening, deployment (real host, not localhost), CI, README worthy of a recruiter's first click, env/config discipline, rate limiting, input validation everywhere, possibly Docker. Deep Node.js track (below) feeds this — recruiters probe internals in interviews too.
 - **Status as of 2026-07-09:** Auth 100% complete. Dashboard layout shell complete. Location-based venue search feature: Steps 1–4 all COMPLETE ✅. Owner Dashboard design FINALIZED in Stitch. **Nested routing COMPLETE** ✅. **Blank page bug FIXED** ✅. **`generateToken.js` helper COMPLETE** ✅ — `backend/utils/generateToken.js` extracts token logic (accessToken + refreshToken + cookie) into shared function `generateToken(userId, role, res)`. `login` controller refactored to use it. `register` controller now calls `generateToken` + returns `{ message, accessToken, username, role }` (auto-login pattern). **Next:** wire frontend `Register.jsx` to handle new register response (store context, navigate to dashboard), add `from` to AuthContext, show "Welcome onboard" message.
 
 ---
@@ -27,6 +28,17 @@ type: project
   - Input validation on backend
   - Separation of concerns (routes → controllers → models)
   - Security practices (never expose passwords, use env vars for secrets)
+
+### Deep Node.js Track (added 2026-08-20)
+
+User wants complete + deep Node.js mastery now, not just "enough to ship." Two tracks run parallel:
+
+- **Project track** — stays Socratic + build-first (unchanged). User writes code, mentor questions.
+- **Deep track** — for concepts project touched shallowly (event loop, streams, Buffer, module system internals, cluster/worker_threads, error-first callbacks vs promises, fs internals, raw http module), pause project, go doc/internals-first, THEN return to project code — user explains how concept applies there.
+
+Trigger for deep-dive: either user asks directly, or mentor notices a shallow spot while building and flags it.
+
+**Priority order decided (2026-08-20):** Finish features first, harden after. Order: Register.jsx auto-login wiring → AddVenue form → remaining DB tables (grounds, time_slots, bookings) → full booking flow → THEN production hardening pass (tests, logging, validation layer, deployment, CI, README). Rationale: avoid hardening code whose shape will still change.
 
 ### NEW Learning Framework (added 2026-06-13) — follow for EVERY implementation, no matter how small:
 
