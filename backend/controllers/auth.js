@@ -65,6 +65,8 @@ async function register(req, res) {
       ],
     );
 
+    // This is for auto-login after registering an account
+    // ---------------------------------------------- //
     const user = result.rows[0];
     const accessToken = generateToken(user.user_id, user.role, res);
 
@@ -80,6 +82,7 @@ async function register(req, res) {
     console.log(error);
     return res.status(500).json({ message: "Server error" });
   }
+  // ---------------------------------------------- //
 }
 
 // This function is for the logic of '/login' route
