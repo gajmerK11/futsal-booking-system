@@ -41,9 +41,10 @@ type: project
 2. **`src/models/db.ts`** — COMPLETE ✅. `require`→`import`, `module.exports`→`export default`, uses `env` from `env.ts` (no more manual `Number()` cast, no direct `process.env` access).
 3. **`src/middleware/verifyToken.ts`** — COMPLETE ✅. `Request`/`Response`/`NextFunction` typed correctly, `token` undefined guard added (`noUncheckedIndexedAccess` catch — real edge case: malformed `Authorization` header). `req.user` field added via declaration merging: `src/types/jwt.ts` (`UserPayload` interface: `{ id: number; role: "user" | "owner" }`, matches actual `jwt.sign()` payload shape) + `src/types/express.d.ts` (`declare global { namespace Express { interface Request { user?: UserPayload } } }`). `jwt.verify()` return type (`string | JwtPayload`) resolved via `decoded as UserPayload` assertion — justified since payload shape fully controlled by this app's own `generateToken.js`, not external input. `npx tsc --noEmit` clean.
 4. **`src/controllers/user.ts`** — COMPLETE ✅. `getProfile` — straight `Request`/`Response` typing, returns `req.user` (now typed via the merge above). Clean compile.
-5. **`src/utils/generateToken.ts`** — IN PROGRESS (moved up in order — see note below). Reuses `UserPayload["id"]` / `UserPayload["role"]` indexed-access types instead of re-typing `number`/`"user"|"owner"` — one source of truth.
+5. **`src/utils/generateToken.ts`** — COMPLETE ✅. Reuses `UserPayload["id"]` / `UserPayload["role"]` indexed-access types instead of re-typing `number`/`"user"|"owner"` — one source of truth. Fixed missing `Response` import (self-caught by user).
+6. **`src/controllers/auth.ts`** — COMPLETE ✅. `register`/`login`/`refresh`/`logout` all migrated. `refresh()`'s inline `jwt.verify()` had same `string | JwtPayload` issue as `verifyToken.ts` — user solved it independently reusing the `as UserPayload` assertion pattern. Bottom export line self-corrected from leftover `module.exports = {...}` to `export { register, login, refresh, logout };` matching rest of file's `import` syntax (user caught this himself after a nudge). `npx tsc --noEmit` clean.
 
-**Order correction:** `auth.js` imports `generateToken.js`. `allowJs` is off, so a plain untyped `.js` import from a `src` TS file needs resolving BEFORE `auth.ts` is written (exact compiler error not yet re-verified after mentor gave a wrong/hallucinated `rootDir` justification for this — corrected: diagnose from actual `tsc` output, not predicted reasoning). So `generateToken.ts` now migrates before `auth.ts`, then `auth.ts`.
+**Old JS duplicates pending delete:** `backend/controllers/auth.js`, `backend/utils/generateToken.js` — now dead, migrated to `src/`, need deleting (same as `backend/controllers/user.js` already deleted after its migration).
 
 ### Key TS concepts taught so far (for continuity)
 
@@ -63,9 +64,9 @@ Mentor now gives **minimum hints, not full code**, during migration — points a
 
 ### Immediately next
 
-1. Finish `src/utils/generateToken.ts` — confirm real compiler error from importing/replacing old `.js` version, resolve, clean `tsc --noEmit`
-2. `controllers/auth.js` → `src/controllers/auth.ts` (register/login/refresh/logout — biggest file so far, reuses `pool`, `env`, `UserPayload`, `generateToken`)
-3. `routes/*.js` → `src/routes/*.ts`
+1. Delete dead JS duplicates: `backend/controllers/auth.js`, `backend/utils/generateToken.js`
+2. `routes/*.js` → `src/routes/*.ts` — 4 files (`auth.js`, `user.js`, `location.js`, `venues.js`), usually thin `express.Router()` wiring, should be quick. Start with `routes/user.js`.
+3. `controllers/location.js` + `controllers/venues.js` → `src/controllers/*.ts` (not yet migrated — only `user.ts` and `auth.ts` done so far)
 4. `index.js` → `src/index.ts` (last — this is what makes `npm run dev` actually work again)
 5. Frontend TS setup (Vite → tsx) once backend migration done
 6. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS

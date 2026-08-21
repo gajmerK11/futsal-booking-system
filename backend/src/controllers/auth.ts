@@ -1,10 +1,13 @@
-const pool = require("../src/models/db.js");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const { generateToken } = require("../utils/generateToken.js");
+import pool from "../models/db";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { generateToken } from "../utils/generateToken";
+import { Request, Response } from "express";
+import { env } from "../config/env";
+import { UserPayload } from "../types/jwt";
 
 // This function is for the logic of '/register' route
-async function register(req, res) {
+async function register(req: Request, res: Response) {
   try {
     // extracting from request body
     const username = req.body.username;
@@ -86,7 +89,7 @@ async function register(req, res) {
 }
 
 // This function is for the logic of '/login' route
-async function login(req, res) {
+async function login(req: Request, res: Response) {
   try {
     // extracting from request body
     const email = req.body.email;
@@ -140,7 +143,7 @@ async function login(req, res) {
 }
 
 // refreshToken function
-function refresh(req, res) {
+function refresh(req: Request, res: Response) {
   // Step-1: reading refreshToken from cookie
   const refreshToken = req.cookies.refreshToken;
   // This is for 'what if no cookies exist - browser never logged in, cookie expired, cleared?'. So - if no cookie (no cookie means no refreshToken), return 401
@@ -152,12 +155,12 @@ function refresh(req, res) {
     // Step-2: verify the token
     const verifiedToken = jwt.verify(
       refreshToken,
-      process.env.REFRESH_TOKEN_SECRET,
-    );
+      env.REFRESH_TOKEN_SECRET,
+    ) as UserPayload;
     // Step-3: sign new access token (create new access token)
     const newAccessToken = jwt.sign(
       { id: verifiedToken.id, role: verifiedToken.role },
-      process.env.JWT_SECRET,
+      env.JWT_SECRET,
       { expiresIn: "15m" },
     );
     // Step-4: send new access token in response/json response
@@ -170,7 +173,7 @@ function refresh(req, res) {
   }
 }
 
-function logout(req, res) {
+function logout(req: Request, res: Response) {
   /**
    * 'refreshToken' here is just a string - the name of the cookie we want to clear.
    * We are not referencing any variable, we are just telling Express: "find the cookie named 'refreshToken' in the response headers and clear it."
@@ -179,4 +182,4 @@ function logout(req, res) {
   return res.status(200).json({ message: "Logged out successfully" });
 }
 
-module.exports = { register, login, refresh, logout };
+export { register, login, refresh, logout };
