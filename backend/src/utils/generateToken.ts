@@ -1,17 +1,22 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
+import { env } from "../config/env";
+import { UserPayload } from "../types/jwt";
+import { Response } from "express";
 
-function generateToken(userId, role, res) {
+function generateToken(
+  userId: UserPayload["id"],
+  role: UserPayload["role"],
+  res: Response,
+) {
   // generating access token which is a jwt token ('jwt.sign()' is the method that both generates and signs the token in one step)
-  const accessToken = jwt.sign(
-    { id: userId, role: role },
-    process.env.JWT_SECRET,
-    { expiresIn: "15m" },
-  );
+  const accessToken = jwt.sign({ id: userId, role: role }, env.JWT_SECRET, {
+    expiresIn: "15m",
+  });
 
   // generating refresh token
   const refreshToken = jwt.sign(
     { id: userId, role: role },
-    process.env.REFRESH_TOKEN_SECRET,
+    env.REFRESH_TOKEN_SECRET,
     { expiresIn: "7d" },
   );
 
@@ -28,4 +33,4 @@ function generateToken(userId, role, res) {
   return accessToken;
 }
 
-module.exports = { generateToken };
+export { generateToken };

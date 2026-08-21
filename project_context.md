@@ -39,7 +39,11 @@ type: project
 
 1. **`src/config/env.ts`** — NEW file (wasn't in original JS codebase). Uses `zod` to validate all 7 env vars (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `REFRESH_TOKEN_SECRET`) at startup — fails fast with clear error if any missing/malformed, instead of silent `undefined` bugs later. All string fields use `.min(1)` (no empty strings allowed), `DB_PORT` uses `z.coerce.number().positive()`. Exports typed `env` object — replaces all `process.env.X` usage across the codebase going forward.
 2. **`src/models/db.ts`** — COMPLETE ✅. `require`→`import`, `module.exports`→`export default`, uses `env` from `env.ts` (no more manual `Number()` cast, no direct `process.env` access).
-3. **`src/middleware/verifyToken.ts`** — IN PROGRESS. Converted `require`→`import`, `module.exports`→`export default`, added `Request`/`Response`/`NextFunction` types from `"express"` (initial mistake: only imported `NextFunction`, causing TS to silently fall back to unrelated global browser `Request`/`Response` types — root-caused and fixed). Added guard for `token` possibly `undefined` (surfaced by `noUncheckedIndexedAccess` tsconfig flag catching a real edge case: malformed `Authorization` header). **Remaining:** `req.user = decoded` errors — TS's `Request` type doesn't have a `.user` field (Express's own types don't know about this app's custom convention). Fix in progress: declaration merging via `backend/src/types/express.d.ts` + a dedicated `backend/src/types/jwt.ts` exporting `UserPayload` interface (`{ id: number; role: "user" | "owner" }`, matches actual `jwt.sign()` payload shape in `generateToken.js`) — NOT YET CREATED, next action. Also unresolved: `jwt.verify()` return type (`string | JwtPayload`) likely won't directly assign to `req.user: UserPayload` — expected next compiler error, not yet hit.
+3. **`src/middleware/verifyToken.ts`** — COMPLETE ✅. `Request`/`Response`/`NextFunction` typed correctly, `token` undefined guard added (`noUncheckedIndexedAccess` catch — real edge case: malformed `Authorization` header). `req.user` field added via declaration merging: `src/types/jwt.ts` (`UserPayload` interface: `{ id: number; role: "user" | "owner" }`, matches actual `jwt.sign()` payload shape) + `src/types/express.d.ts` (`declare global { namespace Express { interface Request { user?: UserPayload } } }`). `jwt.verify()` return type (`string | JwtPayload`) resolved via `decoded as UserPayload` assertion — justified since payload shape fully controlled by this app's own `generateToken.js`, not external input. `npx tsc --noEmit` clean.
+4. **`src/controllers/user.ts`** — COMPLETE ✅. `getProfile` — straight `Request`/`Response` typing, returns `req.user` (now typed via the merge above). Clean compile.
+5. **`src/utils/generateToken.ts`** — IN PROGRESS (moved up in order — see note below). Reuses `UserPayload["id"]` / `UserPayload["role"]` indexed-access types instead of re-typing `number`/`"user"|"owner"` — one source of truth.
+
+**Order correction:** `auth.js` imports `generateToken.js`. `allowJs` is off, so a plain untyped `.js` import from a `src` TS file needs resolving BEFORE `auth.ts` is written (exact compiler error not yet re-verified after mentor gave a wrong/hallucinated `rootDir` justification for this — corrected: diagnose from actual `tsc` output, not predicted reasoning). So `generateToken.ts` now migrates before `auth.ts`, then `auth.ts`.
 
 ### Key TS concepts taught so far (for continuity)
 
@@ -53,13 +57,18 @@ type: project
 - Declaration merging — how to add custom fields (`req.user`) to a third-party library's types (Express) without editing the library itself; industry-standard pattern, not a hack; consolidate ALL custom `req` fields into ONE interface block, not one file per field
 - Difference between annotating a variable with an existing type (`req: Request`) vs. defining/extending that type's actual shape
 
+### Teaching-style update (2026-08-21)
+
+Mentor now gives **minimum hints, not full code**, during migration — points at which types/imports/pattern to reuse, lets user write it. Full code only after 2-3 failed attempts on the same spot. Also: no unverified technical claims — diagnose from actual `tsc` error output, not predicted reasoning (mentor hallucinated a `rootDir` justification once, corrected). Full rule in Claude's persistent memory (`feedback_teaching_style.md`, rule 5).
+
 ### Immediately next
 
-1. Create `backend/src/types/jwt.ts` (`UserPayload` interface) + `backend/src/types/express.d.ts` (declaration merging for `req.user`)
-2. Finish `verifyToken.ts` — resolve `jwt.verify()` return type vs `UserPayload` assignment
-3. Continue backend migration in order: `controllers/user.js` (small) → `controllers/auth.js` (bigger, most logic) → `utils/generateToken.js` (reuse `UserPayload` type here too) → `routes/*.js` → `index.js` (last — this is what makes `npm run dev` actually work again)
-4. Frontend TS setup (Vite → tsx) once backend migration done
-5. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS
+1. Finish `src/utils/generateToken.ts` — confirm real compiler error from importing/replacing old `.js` version, resolve, clean `tsc --noEmit`
+2. `controllers/auth.js` → `src/controllers/auth.ts` (register/login/refresh/logout — biggest file so far, reuses `pool`, `env`, `UserPayload`, `generateToken`)
+3. `routes/*.js` → `src/routes/*.ts`
+4. `index.js` → `src/index.ts` (last — this is what makes `npm run dev` actually work again)
+5. Frontend TS setup (Vite → tsx) once backend migration done
+6. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS
 
 ---
 
