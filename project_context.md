@@ -46,6 +46,21 @@ type: project
 
 **Old JS duplicates pending delete:** `backend/controllers/auth.js`, `backend/utils/generateToken.js` — now dead, migrated to `src/`, need deleting (same as `backend/controllers/user.js` already deleted after its migration).
 
+### Decision (2026-08-22): swap `as UserPayload` → zod runtime validation
+
+Discussed `as UserPayload` used in `verifyToken.ts` and `auth.ts`'s `refresh()` (both on `jwt.verify()` return). `as` = compile-time only, no runtime check — silent garbage risk if payload shape ever mismatches. Decided to replace with zod schema + `z.infer`, since zod already installed:
+
+```ts
+const userPayloadSchema = z.object({
+  id: z.number(),
+  role: z.enum(["user", "owner"]),
+});
+type UserPayload = z.infer<typeof userPayloadSchema>; // replaces hand-written interface
+const user = userPayloadSchema.parse(decoded); // replaces 'decoded as UserPayload', throws on mismatch (existing try/catch already handles it)
+```
+
+Pattern shown to user (hints-only rule — not written into actual files by mentor). User's move: rewrite `src/types/jwt.ts` first (schema + inferred type, replacing old interface), then wire `.parse()` into `verifyToken.ts` and `auth.ts`'s `refresh()` in place of the two `as UserPayload` spots. `express.d.ts` declaration merging unaffected (still imports `UserPayload` type, now inferred not hand-written). Run `tsc` after each file.
+
 ### Key TS concepts taught so far (for continuity)
 
 - Why `.ts` needs compiling to `.js` (nothing runs `.ts` directly) — `tsconfig.json` basics (`rootDir`/`outDir`/`target`/`module`)
@@ -64,12 +79,13 @@ Mentor now gives **minimum hints, not full code**, during migration — points a
 
 ### Immediately next
 
-1. Delete dead JS duplicates: `backend/controllers/auth.js`, `backend/utils/generateToken.js`
-2. `routes/*.js` → `src/routes/*.ts` — 4 files (`auth.js`, `user.js`, `location.js`, `venues.js`), usually thin `express.Router()` wiring, should be quick. Start with `routes/user.js`.
-3. `controllers/location.js` + `controllers/venues.js` → `src/controllers/*.ts` (not yet migrated — only `user.ts` and `auth.ts` done so far)
-4. `index.js` → `src/index.ts` (last — this is what makes `npm run dev` actually work again)
-5. Frontend TS setup (Vite → tsx) once backend migration done
-6. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS
+1. Rewrite `src/types/jwt.ts` with zod schema + `z.infer` (see decision above), wire `.parse()` into `verifyToken.ts` + `auth.ts` `refresh()`, replacing `as UserPayload` in both
+2. Delete dead JS duplicates: `backend/controllers/auth.js`, `backend/utils/generateToken.js`
+3. `routes/*.js` → `src/routes/*.ts` — 4 files (`auth.js`, `user.js`, `location.js`, `venues.js`), usually thin `express.Router()` wiring, should be quick. Start with `routes/user.js`.
+4. `controllers/location.js` + `controllers/venues.js` → `src/controllers/*.ts` (not yet migrated — only `user.ts` and `auth.ts` done so far)
+5. `index.js` → `src/index.ts` (last — this is what makes `npm run dev` actually work again)
+6. Frontend TS setup (Vite → tsx) once backend migration done
+7. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS
 
 ---
 
