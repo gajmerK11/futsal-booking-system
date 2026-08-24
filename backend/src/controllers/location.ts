@@ -1,4 +1,12 @@
-async function searchLocation(req, res) {
+import { Request, Response } from "express";
+
+interface NominatimResult {
+  lat: string;
+  lon: string;
+  display_name: string;
+}
+
+async function searchLocation(req: Request, res: Response) {
   try {
     /*
     Here we have done 'req.query.q' because:
@@ -23,7 +31,7 @@ async function searchLocation(req, res) {
         },
       },
     );
-    const data = await response.json();
+    const data: NominatimResult[] = await response.json();
     // 'results' is an array of object which gets sent as a reponse to frontend which frontend consumes to show the location suggestion as user types the location
     const results = data.map((place) => ({
       lat: place.lat,
@@ -43,4 +51,4 @@ async function searchLocation(req, res) {
   }
 }
 
-module.exports = { searchLocation };
+export { searchLocation };
