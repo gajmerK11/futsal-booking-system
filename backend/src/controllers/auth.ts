@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { generateToken } from "../utils/generateToken";
 import { Request, Response } from "express";
 import { env } from "../config/env";
-import { UserPayload } from "../types/jwt";
+import { userPayloadSchema } from "../types/jwt";
 
 // This function is for the logic of '/register' route
 async function register(req: Request, res: Response) {
@@ -153,13 +153,12 @@ function refresh(req: Request, res: Response) {
 
   try {
     // Step-2: verify the token
-    const verifiedToken = jwt.verify(
-      refreshToken,
-      env.REFRESH_TOKEN_SECRET,
-    ) as UserPayload;
+    const verifiedToken = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET);
+    // validating the token
+    const validatedToken = userPayloadSchema.parse(verifiedToken);
     // Step-3: sign new access token (create new access token)
     const newAccessToken = jwt.sign(
-      { id: verifiedToken.id, role: verifiedToken.role },
+      { id: validatedToken.id, role: validatedToken.role },
       env.JWT_SECRET,
       { expiresIn: "15m" },
     );

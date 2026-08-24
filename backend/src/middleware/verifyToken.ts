@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { Request, Response, NextFunction } from "express";
-import { UserPayload } from "../types/jwt";
+import { userPayloadSchema } from "../types/jwt";
 
 function verifyToken(req: Request, res: Response, next: NextFunction) {
   // Step-1: Reading 'Authorization' header from request header
@@ -24,7 +24,7 @@ function verifyToken(req: Request, res: Response, next: NextFunction) {
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET);
     // attching the jwt payload to request so controllers on protected routes know who made the request
-    req.user = decoded as UserPayload;
+    req.user = userPayloadSchema.parse(decoded);
     // this passes request to the route (middleware standard)
     next();
   } catch (error) {

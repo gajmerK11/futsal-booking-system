@@ -61,6 +61,8 @@ const user = userPayloadSchema.parse(decoded); // replaces 'decoded as UserPaylo
 
 Pattern shown to user (hints-only rule — not written into actual files by mentor). User's move: rewrite `src/types/jwt.ts` first (schema + inferred type, replacing old interface), then wire `.parse()` into `verifyToken.ts` and `auth.ts`'s `refresh()` in place of the two `as UserPayload` spots. `express.d.ts` declaration merging unaffected (still imports `UserPayload` type, now inferred not hand-written). Run `tsc` after each file.
 
+**STATUS: COMPLETE ✅ (2026-08-24).** `src/types/jwt.ts` now exports both `userPayloadSchema` (zod object) and `export type UserPayload = z.infer<typeof userPayloadSchema>`. `verifyToken.ts`: `req.user = userPayloadSchema.parse(decoded)` — `as UserPayload` gone. `auth.ts` `refresh()`: `.parse()` correctly applied to `verifiedToken` (the `jwt.verify()` result), NOT to `jwt.sign()`'s output — this was a bug mentor caught mid-way (user had first `.parse()`'d the wrong value, wiring it onto the signed token string instead of the decoded payload) and user fixed. Also caught + fixed: `userPayloadSchema` briefly lost its `export` keyword after user split it from the type line — re-added. Final `npx tsc --noEmit` — clean, zero errors, confirmed via terminal output.
+
 ### Key TS concepts taught so far (for continuity)
 
 - Why `.ts` needs compiling to `.js` (nothing runs `.ts` directly) — `tsconfig.json` basics (`rootDir`/`outDir`/`target`/`module`)
@@ -79,7 +81,7 @@ Mentor now gives **minimum hints, not full code**, during migration — points a
 
 ### Immediately next
 
-1. Rewrite `src/types/jwt.ts` with zod schema + `z.infer` (see decision above), wire `.parse()` into `verifyToken.ts` + `auth.ts` `refresh()`, replacing `as UserPayload` in both
+1. ~~Rewrite `src/types/jwt.ts` with zod schema + `z.infer`, wire `.parse()` into `verifyToken.ts` + `auth.ts` `refresh()`~~ ✅ DONE (2026-08-24)
 2. Delete dead JS duplicates: `backend/controllers/auth.js`, `backend/utils/generateToken.js`
 3. `routes/*.js` → `src/routes/*.ts` — 4 files (`auth.js`, `user.js`, `location.js`, `venues.js`), usually thin `express.Router()` wiring, should be quick. Start with `routes/user.js`.
 4. `controllers/location.js` + `controllers/venues.js` → `src/controllers/*.ts` (not yet migrated — only `user.ts` and `auth.ts` done so far)
