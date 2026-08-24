@@ -1,5 +1,5 @@
 import "express";
-import { userPayloadSchema } from "./jwt";
+import { UserPayload } from "./jwt";
 
 declare global {
   namespace Express {

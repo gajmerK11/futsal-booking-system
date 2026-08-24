@@ -44,7 +44,11 @@ type: project
 5. **`src/utils/generateToken.ts`** — COMPLETE ✅. Reuses `UserPayload["id"]` / `UserPayload["role"]` indexed-access types instead of re-typing `number`/`"user"|"owner"` — one source of truth. Fixed missing `Response` import (self-caught by user).
 6. **`src/controllers/auth.ts`** — COMPLETE ✅. `register`/`login`/`refresh`/`logout` all migrated. `refresh()`'s inline `jwt.verify()` had same `string | JwtPayload` issue as `verifyToken.ts` — user solved it independently reusing the `as UserPayload` assertion pattern. Bottom export line self-corrected from leftover `module.exports = {...}` to `export { register, login, refresh, logout };` matching rest of file's `import` syntax (user caught this himself after a nudge). `npx tsc --noEmit` clean.
 
-**Old JS duplicates pending delete:** `backend/controllers/auth.js`, `backend/utils/generateToken.js` — now dead, migrated to `src/`, need deleting (same as `backend/controllers/user.js` already deleted after its migration).
+**Old JS duplicates — DELETED ✅ (2026-08-24):** `backend/controllers/auth.js`, `backend/utils/generateToken.js` — confirmed gone (same as `backend/controllers/user.js` already deleted after its migration).
+
+7. **`src/controllers/location.ts`** — COMPLETE ✅. User migrated independently (ahead of routes migration). `searchLocation` — Nominatim proxy logic unchanged. Hit `TS7006: Parameter 'place' implicitly has an 'any' type` on `data.map((place) => ...)` — root cause: `response.json()` returns `Promise<any>`, so `data` (and anything derived from it) starts untyped. Fixed by defining local `interface NominatimResult { lat: string; lon: string; display_name: string }` (kept file-local, not in `types/` — only used here, no cross-file reuse) and typing `const data: NominatimResult[] = await response.json();` — this made `.map()`'s `place` param infer automatically (no manual annotation needed). Also fixed leftover `module.exports = { searchLocation }` → `export { searchLocation };` to match rest of file's ESM import syntax. `tsc` clean.
+
+8. **`src/controllers/venues.ts`** — COMPLETE ✅. User migrated independently. Surfaced a real bug during check: `src/types/express.d.ts` line 2 imported `{ userPayloadSchema }` from `./jwt` instead of `{ UserPayload }` (the type) — `UserPayload` on line 8 (`user?: UserPayload`) was an unresolved identifier, but `tsconfig.json`'s `skipLibCheck: true` silently skips type-checking on ALL `.d.ts` files (own hand-written ones too, not just `node_modules`) — so the bug never surfaced in `tsc` output, and `req.user.id` accesses across the codebase went completely unchecked (silently typed as if not possibly-undefined). Fixed the import. After fix, `venues.ts`'s `req.user.id` correctly started throwing "possibly undefined" — expected, since `strictNullChecks` now actually sees `user?: UserPayload` for the first time. Fixed via guard clause (`if (!req.user) return res.status(401)...`) — same early-return narrowing pattern already used for `!token` in `verifyToken.ts`. Taught: TS narrows `req.user`'s type after an early-return guard (undefined ruled out for rest of function scope) — this has nothing to do with route/middleware migration order, TS never sees actual Express route wiring, purely static per-file analysis. Checked `user.ts`'s `getProfile` too — no guard needed there, it returns `req.user` directly without property access, no unsafe drill-down. `tsc` clean across both files.
 
 ### Decision (2026-08-22): swap `as UserPayload` → zod runtime validation
 
@@ -82,9 +86,9 @@ Mentor now gives **minimum hints, not full code**, during migration — points a
 ### Immediately next
 
 1. ~~Rewrite `src/types/jwt.ts` with zod schema + `z.infer`, wire `.parse()` into `verifyToken.ts` + `auth.ts` `refresh()`~~ ✅ DONE (2026-08-24)
-2. Delete dead JS duplicates: `backend/controllers/auth.js`, `backend/utils/generateToken.js`
-3. `routes/*.js` → `src/routes/*.ts` — 4 files (`auth.js`, `user.js`, `location.js`, `venues.js`), usually thin `express.Router()` wiring, should be quick. Start with `routes/user.js`.
-4. `controllers/location.js` + `controllers/venues.js` → `src/controllers/*.ts` (not yet migrated — only `user.ts` and `auth.ts` done so far)
+2. ~~Delete dead JS duplicates: `backend/controllers/auth.js`, `backend/utils/generateToken.js`~~ ✅ DONE (2026-08-24)
+3. ~~`controllers/location.js` + `controllers/venues.js` → `src/controllers/*.ts`~~ ✅ DONE (2026-08-24, migrated independently — see items 7–8 above)
+4. `routes/*.js` → `src/routes/*.ts` — 4 files (`auth.js`, `user.js`, `location.js`, `venues.js`), usually thin `express.Router()` wiring, should be quick. Start with `routes/user.js`. **← NEXT UP**
 5. `index.js` → `src/index.ts` (last — this is what makes `npm run dev` actually work again)
 6. Frontend TS setup (Vite → tsx) once backend migration done
 7. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS
