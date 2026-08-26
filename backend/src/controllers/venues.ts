@@ -41,4 +41,4 @@ async function getNearbyVenues(req: Request, res: Response) {
   }
 }
 
-export { getNearbyVenues };
+export default getNearbyVenues;
