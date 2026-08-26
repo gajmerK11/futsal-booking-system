@@ -51,4 +51,4 @@ async function searchLocation(req: Request, res: Response) {
   }
 }
 
-export { searchLocation };
+export default searchLocation;
