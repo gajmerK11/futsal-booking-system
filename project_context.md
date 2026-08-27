@@ -98,8 +98,8 @@ Mentor now gives **minimum hints, not full code**, during migration — points a
 3. ~~`controllers/location.js` + `controllers/venues.js` → `src/controllers/*.ts`~~ ✅ DONE (2026-08-24, migrated independently — see items 7–8 above)
 4. ~~`routes/*.js` → `src/routes/*.ts` — 4 files~~ ✅ DONE (2026-08-26, see item 9 above)
 5. ~~`index.js` → `src/index.ts`~~ ✅ DONE (2026-08-27, see item 10 above) — **BACKEND MIGRATION FULLY COMPLETE**
-6. Frontend TS setup (Vite → tsx) — **← NEXT UP** (built by mentor directly, see role-split note below)
-7. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS (see role-split note below)
+6. ~~Frontend TS setup (Vite → tsx)~~ ✅ DONE (2026-08-27, see "Frontend TypeScript Migration" section below)
+7. ~~Frontend component migration~~ ✅ DONE (2026-08-27, all 11 files converted — see below) — **← NEXT UP: resume paused features (Register.jsx auto-login/role-nav fix, AddVenue form, remaining DB tables, bookings) in TS**
 
 ### Mentor role split — backend vs frontend (decided 2026-08-27)
 
@@ -112,6 +112,33 @@ User is jobless, home full-time → unpredictable/reduced hours (household chore
   - Any real judgment call (industry-standard vs learning-friendly, structural/library choice) — mentor asks first, never decides solo.
 
 Full rule saved in Claude's persistent memory (`feedback_frontend_role_split.md`).
+
+**Note (2026-08-27):** user asked to move the *entire* existing frontend to TS in one pass too (overrides the "leave existing files untouched" clause above, for this migration only — role split itself still stands).
+
+## Frontend TypeScript Migration — COMPLETE ✅ (2026-08-27)
+
+Built directly by mentor (per role split above), brief walkthrough given after.
+
+**Setup:**
+- Installed `typescript`, `@types/node` (dev deps)
+- `tsconfig.json` (root, references-only) + `tsconfig.app.json` (covers `src/`, strict, `allowJs`/`checkJs:false` originally for mixed JS/TS — now moot since 100% TS) + `tsconfig.node.json` (covers `vite.config.ts` only, Node types)
+- `vite.config.js` → `vite.config.ts`
+- `package.json` `build` script → `tsc -b && vite build` (type errors now block the build)
+- `src/vite-env.d.ts` added — `/// <reference types="vite/client" />`, gives TS types for asset imports (`.jpg`, `.css`, etc.) and `import.meta.env`
+
+**All 11 frontend files renamed + converted:** `main.tsx`, `App.tsx`, `context/AuthContext.tsx`, `components/Login.tsx`, `components/Register.tsx`, `components/Dashboard.tsx`, `components/OwnerDashboard.tsx`, `components/AddVenue.tsx`, `components/layout/{Sidebar,DashboardHeader,DashboardLayout}.tsx`. `index.html` script src updated to `main.tsx`.
+
+**Notable type work:**
+- `AuthContext.tsx` — defined `AuthContextType` interface; replaced raw `useContext(AuthContext)` everywhere with a custom `useAuth()` hook (throws clear error if used outside `<AuthProvider>`, avoids repeating undefined-checks at every call site)
+- `Register.tsx` — typed `LocationSuggestion` interface for Nominatim results; `debounceTimer` ref typed as `ReturnType<typeof setTimeout> | null`
+- `Dashboard.tsx` / `OwnerDashboard.tsx` — `location.state` from `useLocation()` is typed `unknown` by react-router, asserted to a local `NavState` interface
+
+**3 real bugs strict TS surfaced + fixed (all confirmed with user via AskUserQuestion before touching behavior):**
+1. **Dashboard content never rendered** — `Dashboard.tsx` passed `children` into `DashboardLayout`, but `DashboardLayout` only ever rendered `<Outlet/>`, silently dropping them. Fixed by nesting `/dashboard` under `DashboardLayout` as an index route in `App.tsx` (same pattern already used for `/owner`), `Dashboard.tsx` no longer wraps itself in `<DashboardLayout>`.
+2. **OwnerDashboard greeting dead code** — `const message = "login" ? A : B` was always-truthy, "Welcome onboard" branch unreachable. Wired to real `location.state.from`, with a safe default (`from: "login"`) for direct-URL/refresh visits where no nav state exists.
+3. **Login/Register error messages silently swallowed** — `loginMessage`/`registerMessage` state was set but never rendered in JSX, so failed login/register showed nothing to the user. Added a small red text line under each form's submit button. Register's failure branch also now uses the backend's actual error message instead of a `console.log`.
+
+**Verified:** `npx tsc -b` clean, `npm run build` clean (bundles unchanged size-wise, only logic/type diffs).
 
 ---
 
