@@ -98,8 +98,20 @@ Mentor now gives **minimum hints, not full code**, during migration — points a
 3. ~~`controllers/location.js` + `controllers/venues.js` → `src/controllers/*.ts`~~ ✅ DONE (2026-08-24, migrated independently — see items 7–8 above)
 4. ~~`routes/*.js` → `src/routes/*.ts` — 4 files~~ ✅ DONE (2026-08-26, see item 9 above)
 5. ~~`index.js` → `src/index.ts`~~ ✅ DONE (2026-08-27, see item 10 above) — **BACKEND MIGRATION FULLY COMPLETE**
-6. Frontend TS setup (Vite → tsx) — **← NEXT UP**
-7. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS
+6. Frontend TS setup (Vite → tsx) — **← NEXT UP** (built by mentor directly, see role-split note below)
+7. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS (see role-split note below)
+
+### Mentor role split — backend vs frontend (decided 2026-08-27)
+
+User is jobless, home full-time → unpredictable/reduced hours (household chores, some days 0 hours). Decision: front-load backend depth since backend roles are the current job target and no backend portfolio piece exists yet. Frontend mastery deferred to future mini-projects after this project ships.
+
+- **Backend:** unchanged — Socratic, hints-only, hands-off (user runs/writes 100% of it), same as always.
+- **Frontend (going forward):** role flips — mentor writes the frontend code directly, industry-standard conventions, as a fellow frontend dev. **Existing frontend files (Login.jsx, Register.jsx, Dashboard.jsx, Sidebar.jsx, DashboardHeader.jsx, DashboardLayout.jsx, OwnerDashboard.jsx, AuthContext.jsx, etc.) stay exactly as-is — untouched, no retroactive rewrite.** Only new/incomplete pieces (TS setup, AddVenue.jsx, future components) get built under this new rule.
+  - Brief walkthrough given after each frontend piece (not full teaching) — enough that user isn't blank if asked about it in an interview.
+  - When frontend work needs backend support first (new endpoint, schema change, etc.), mentor flags it explicitly, guides that backend piece the normal Socratic way, then builds the frontend piece once ready.
+  - Any real judgment call (industry-standard vs learning-friendly, structural/library choice) — mentor asks first, never decides solo.
+
+Full rule saved in Claude's persistent memory (`feedback_frontend_role_split.md`).
 
 ---
 
