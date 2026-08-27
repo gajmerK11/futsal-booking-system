@@ -1,6 +1,7 @@
 import leftSideImage from "../assets/register.jpg";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 
 // Shape of one suggestion returned by the backend's location-search proxy
 interface LocationSuggestion {
@@ -40,6 +41,7 @@ function Register() {
     useState<LocationSuggestion | null>(null);
 
   const navigate = useNavigate();
+  const { setAccessToken, setRole: setAuthRole, setUsername: setAuthUsername } = useAuth();
 
   // Auto-dismiss the toast after a few seconds instead of leaving it on screen forever.
   // Re-runs every time a new message comes in; cleanup cancels a stale timer if the
@@ -111,6 +113,13 @@ function Register() {
     if (response.ok) {
       setRegisterFailed(false);
       setRegisterMessage(data.message);
+
+      // Auto-login: backend already issued a token on register, same as a real
+      // login response — push it into context so the app treats this as signed in.
+      setAccessToken(data.accessToken);
+      setAuthRole(data.role);
+      setAuthUsername(data.username);
+
       // Clear the form — matters if navigation ever changes (e.g. user comes back)
       setUsername("");
       setEmail("");
@@ -119,9 +128,9 @@ function Register() {
       setRole("");
       setLocation("");
       setSelectedLocation(null);
-      navigate("/dashboard", {
+      navigate(data.role === "user" ? "/dashboard" : "/owner", {
         state: {
-          username: data.user.username,
+          username: data.username,
           from: "register",
         },
       });

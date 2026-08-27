@@ -2,7 +2,7 @@ import leftSideImage from "../assets/sign-in.jpg";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 
 function Login() {
@@ -10,12 +10,20 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginMessage, setLoginMessage] = useState("");
+  const [loginFailed, setLoginFailed] = useState(false);
 
   // Declaring context variable
   // It gets 'setAccessToken','setRole' and 'setUsername' from auth context to store token, role and username after Login
   const { setAccessToken, setRole, setUsername } = useAuth();
 
   const navigate = useNavigate();
+
+  // Auto-dismiss the toast after a few seconds instead of leaving it on screen forever.
+  useEffect(() => {
+    if (!loginMessage) return;
+    const timer = setTimeout(() => setLoginMessage(""), 4000);
+    return () => clearTimeout(timer);
+  }, [loginMessage]);
 
   // 'Submit' handler function
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -32,6 +40,7 @@ function Login() {
     const data = await response.json();
 
     if (response.ok) {
+      setLoginFailed(false);
       // stores accessToken in react's context variable (i.e. in AuthContext) in frontend so that it can be sent in the future requests to access protected routes
       setAccessToken(data.accessToken);
       // stores role in react's context variable
@@ -48,23 +57,34 @@ function Login() {
         },
       });
     } else {
-      setLoginMessage("Something went wrong");
+      setLoginFailed(true);
+      setLoginMessage(data.message ?? "Something went wrong");
     }
   }
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-100">
+      {/* Toast — floats above everything, doesn't affect card layout/size at all */}
+      {loginMessage && (
+        <div
+          className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 rounded-full px-6 py-2 text-sm font-medium shadow-lg ${
+            loginFailed ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"
+          }`}
+        >
+          {loginMessage}
+        </div>
+      )}
       {/* Card div */}
-      <div className="flex flex-col md:flex-row md:rounded-2xl shadow-2xl overflow-hidden md:w-225 w-full md:h-full md:mx-5">
+      <div className="flex flex-col md:flex-row md:rounded-2xl shadow-2xl overflow-hidden md:w-225 w-full md:h-150 md:mx-5">
         {/* Left side image */}
-        <div className="w-full md:w-1/2">
+        <div className="relative w-full md:w-1/2 h-48 md:h-auto">
           <img
             src={leftSideImage}
             alt="signInImage"
-            className="w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
           />
         </div>
         {/* Right side form */}
-        <div className="w-full md:w-1/2 p-10">
+        <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
           <h2 className="text-2xl md:text-3xl font-bold">JOIN THE LEAGUE</h2>
           <p className="mt-2">Sign in to your account</p>
           {/* OAuth buttons */}
@@ -122,9 +142,6 @@ function Login() {
             >
               <span>Sign in</span>
             </button>
-            {loginMessage && (
-              <p className="text-sm text-center text-red-500">{loginMessage}</p>
-            )}
           </form>
           {/* 'Don't have account' part */}
           <p className="text-sm text-center text-gray-500 mt-4">
