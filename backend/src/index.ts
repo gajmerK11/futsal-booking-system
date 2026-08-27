@@ -1,24 +1,23 @@
-// Inorder to read from .env, we are importing 'dotenv' here and using its '.config' function
-require("dotenv").config();
-
 // importing 'express'
-const express = require("express");
-const app = express();
-
+import express from "express";
 // importing 'cors'
-const cors = require("cors");
+import cors from "cors";
+// importing 'cookie parser'
+import cookieParser from "cookie-parser";
+// importing 'pool' which is exported from the file 'db.js'
+// './' tells nodejs "look for local file, not a package"
+import pool from "./models/db";
+import authRoutes from "./routes/auth";
+import userRoutes from "./routes/user";
+import locationRoutes from "./routes/location";
+import venueRoutes from "./routes/venues";
+
+const app = express();
 // cors configuration object for allowing cookies to be sent for cross-origin requests
 const corsOptions = {
   origin: "http://localhost:5173",
   credentials: true,
 };
-
-// importing 'cookie parser'
-const cookieParser = require("cookie-parser");
-
-// importing 'pool' which is exported from the file 'db.js'
-// './' tells nodejs "look for local file, not a package"
-const pool = require("./models/db.js");
 
 // middlewares
 app.use(express.json());
@@ -27,17 +26,16 @@ app.use(cookieParser());
 
 // Routes
 // Authentication Routes
-const authRoutes = require("./routes/auth.js");
 app.use("/auth", authRoutes);
+
 // Profile Routes
-const userRoutes = require("./routes/user.js");
 app.use("/user", userRoutes);
+
 // Location routes
-const locationRoutes = require("./routes/location.js");
 // this appends '/location' at beginning of '/search' i.e. '/location/search
 app.use("/location", locationRoutes);
+
 // Venue routes
-const venueRoutes = require("./routes/venues.js");
 app.use("/venues", venueRoutes);
 
 app.listen(3000, () => {

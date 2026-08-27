@@ -54,7 +54,9 @@ type: project
 
 Old `routes/*.js` — **DELETED ✅ (2026-08-26)**.
 
-10. **`src/index.ts`** — IN PROGRESS. File exists (renamed from `index.js`, `ts-node-dev` script was already pointing at it) but still unconverted CommonJS (`require`/`module.exports`) — not yet migrated. Discovered `src/config/env.ts` (already built earlier, see item 1) already calls `import "dotenv/config"` internally — so `index.ts` no longer needs its own `require("dotenv").config()` line; that import chain fires automatically once `index.ts` imports `db.ts` (which imports `env.ts`). Hints given: swap all `require`→`import`; `pool` is default export from `db.ts`; all 4 route files are `export default router` (except double-check `venues.ts`/`auth.ts` per item 9 note above) so `import authRoutes from "./routes/auth"` style; drop the manual dotenv line entirely. User has not yet applied these — **NEXT UP** to resume.
+10. **`src/index.ts`** — COMPLETE ✅ (2026-08-27). `require`→`import` across the board. Dropped manual `require("dotenv").config()` — confirmed `env.ts`'s `import "dotenv/config"` fires transitively via `db.ts` import, no separate call needed. `pool` imported default (`import pool from "./models/db"`). All 4 route routers imported default (`import authRoutes from "./routes/auth"` style). User deliberately kept all `import` statements scattered next to their usage (not hoisted to top) — readability choice for learning ("oh so we need this route so we importing"), not a `tsc` issue (ES imports hoist regardless of position). Mentor flagged as non-standard convention for portfolio-readiness later; user's call for now. `npx tsc --noEmit` clean.
+
+**BACKEND TYPESCRIPT MIGRATION — FULLY COMPLETE ✅ (2026-08-27).** All of config, models, middleware, types, utils, controllers, routes, and entry point (`index.ts`) migrated. Old `.js` originals all deleted. `npm run dev` (ts-node-dev) now points at a fully-TS backend.
 
 ### Decision (2026-08-22): swap `as UserPayload` → zod runtime validation
 
@@ -95,8 +97,8 @@ Mentor now gives **minimum hints, not full code**, during migration — points a
 2. ~~Delete dead JS duplicates: `backend/controllers/auth.js`, `backend/utils/generateToken.js`~~ ✅ DONE (2026-08-24)
 3. ~~`controllers/location.js` + `controllers/venues.js` → `src/controllers/*.ts`~~ ✅ DONE (2026-08-24, migrated independently — see items 7–8 above)
 4. ~~`routes/*.js` → `src/routes/*.ts` — 4 files~~ ✅ DONE (2026-08-26, see item 9 above)
-5. `index.js` → `src/index.ts` (last — this is what makes `npm run dev` actually work again). File exists but still unconverted CommonJS — hints given (see item 10 above), not yet applied. **← NEXT UP**
-6. Frontend TS setup (Vite → tsx) once backend migration done
+5. ~~`index.js` → `src/index.ts`~~ ✅ DONE (2026-08-27, see item 10 above) — **BACKEND MIGRATION FULLY COMPLETE**
+6. Frontend TS setup (Vite → tsx) — **← NEXT UP**
 7. Frontend component migration, then resume paused features (Register.jsx, AddVenue, remaining DB tables, bookings) — all written in TS
 
 ---
