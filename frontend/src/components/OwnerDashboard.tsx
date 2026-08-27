@@ -1,13 +1,20 @@
-import { useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+// What Login.jsx passes via navigate(path, { state: {...} }). Owner dashboard
+// can also be reached with no state at all (direct URL, page refresh) — so
+// 'from' defaults to "login" in that case, same as a normal sign-in greeting.
+interface NavState {
+  from?: string;
+}
 
 function OwnerDashboard() {
-  const { username } = useContext(AuthContext);
+  const { username } = useAuth();
+  const location = useLocation();
+  const { from } = (location.state as NavState | null) ?? { from: "login" };
 
-  const message = "login"
-    ? `Hello, ${username}`
-    : `Welcome onboard ${username}`;
+  const message =
+    from === "login" ? `Hello, ${username}` : `Welcome onboard ${username}`;
 
   const navigate = useNavigate();
 
@@ -27,7 +34,7 @@ function OwnerDashboard() {
         <h2 className="text-sm font-extrabold text-on-surface-variant mb-2 tracking-widest">
           MY VENUE
         </h2>
-        <div className="flex flex-col border-2 rounded-3xl border-dashed border-outline-variant items-center p-10 bg-surface-container-low gap-4 min-h-[300px] justify-center hover:border-indigo-400">
+        <div className="flex flex-col border-2 rounded-3xl border-dashed border-outline-variant items-center p-10 bg-surface-container-low gap-4 min-h-75 justify-center hover:border-indigo-400">
           <div className="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center">
             <span className="material-symbols-outlined text-primary text-3xl">
               add_business

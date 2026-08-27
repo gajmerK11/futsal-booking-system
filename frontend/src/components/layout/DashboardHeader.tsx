@@ -1,8 +1,7 @@
-import { useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 function DashboardHeader() {
-  const { role, username } = useContext(AuthContext);
+  const { role, username } = useAuth();
 
   // Splitting for profile picture
   const splittedWords = username.split(" ");

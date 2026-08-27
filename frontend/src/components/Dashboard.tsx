@@ -1,15 +1,22 @@
 import { useLocation } from "react-router-dom";
-import { useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
-import DashboardLayout from "./layout/DashboardLayout";
+import { useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+
+// What we expect to have been passed in via navigate(path, { state: {...} })
+interface NavState {
+  username: string;
+  from: string;
+}
 
 function Dashboard() {
   const location = useLocation();
-  const { username, from } = location.state;
+  // react-router types 'location.state' as 'unknown' since it can carry anything —
+  // we know what we put there (see Login.jsx's navigate call), so we assert the shape.
+  const { username, from } = location.state as NavState;
   const message =
     from === "login" ? `Hello, ${username}` : `Welcome onboard ${username}`;
   // Grabbing 'accessToken' and 'setAccessToken' from context
-  const { accessToken, setAccessToken } = useContext(AuthContext);
+  const { accessToken, setAccessToken } = useAuth();
 
   useEffect(() => {
     async function fetchProfile() {
@@ -58,18 +65,16 @@ function Dashboard() {
     fetchProfile();
   }, []);
   return (
-    <DashboardLayout>
-      <main className="p-8">
-        <section>
-          <h1 className="text-display-lg font-extrabold tracking-tight text-on-surface">
-            {message}
-          </h1>
-          <p className="text-body-lg text-on-surface-variant font-medium">
-            Find a court. Book a slot. Play.
-          </p>
-        </section>
-      </main>
-    </DashboardLayout>
+    <main className="p-8">
+      <section>
+        <h1 className="text-display-lg font-extrabold tracking-tight text-on-surface">
+          {message}
+        </h1>
+        <p className="text-body-lg text-on-surface-variant font-medium">
+          Find a court. Book a slot. Play.
+        </p>
+      </section>
+    </main>
   );
 }
 export default Dashboard;

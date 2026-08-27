@@ -2,8 +2,8 @@ import leftSideImage from "../assets/sign-in.jpg";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
   // Declaring state variables
@@ -13,12 +13,12 @@ function Login() {
 
   // Declaring context variable
   // It gets 'setAccessToken','setRole' and 'setUsername' from auth context to store token, role and username after Login
-  const { setAccessToken, setRole, setUsername } = useContext(AuthContext);
+  const { setAccessToken, setRole, setUsername } = useAuth();
 
   const navigate = useNavigate();
 
   // 'Submit' handler function
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const response = await fetch("http://localhost:3000/auth/login", {
       method: "POST",
@@ -54,7 +54,7 @@ function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-100">
       {/* Card div */}
-      <div className="flex flex-col md:flex-row md:rounded-2xl shadow-2xl overflow-hidden md:w-[900px] w-full md:h-full md:mx-5">
+      <div className="flex flex-col md:flex-row md:rounded-2xl shadow-2xl overflow-hidden md:w-225 w-full md:h-full md:mx-5">
         {/* Left side image */}
         <div className="w-full md:w-1/2">
           <img
@@ -122,6 +122,9 @@ function Login() {
             >
               <span>Sign in</span>
             </button>
+            {loginMessage && (
+              <p className="text-sm text-center text-red-500">{loginMessage}</p>
+            )}
           </form>
           {/* 'Don't have account' part */}
           <p className="text-sm text-center text-gray-500 mt-4">

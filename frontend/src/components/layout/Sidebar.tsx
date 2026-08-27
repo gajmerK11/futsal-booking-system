@@ -1,8 +1,14 @@
-import { useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useLocation, Link } from "react-router-dom";
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: string;
+}
+
 function Sidebar() {
-  const userNav = [
+  const userNav: NavItem[] = [
     {
       label: "Dashboard",
       href: "/dashboard",
@@ -25,7 +31,7 @@ function Sidebar() {
     },
   ];
 
-  const ownerNav = [
+  const ownerNav: NavItem[] = [
     {
       label: "Dashboard",
       href: "/owner",
@@ -48,7 +54,7 @@ function Sidebar() {
     },
   ];
 
-  const { role, logout } = useContext(AuthContext);
+  const { role, logout } = useAuth();
 
   const navItems = role === "user" ? userNav : ownerNav;
 
