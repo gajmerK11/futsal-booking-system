@@ -30,7 +30,7 @@ type: project
 
 ### Backend TS setup — COMPLETE ✅
 
-- Installed: `typescript`, `@types/node`, `@types/express`, `@types/cors`, `@types/cookie-parser`, `@types/bcrypt`, `@types/jsonwebtoken`, `@types/pg`, `ts-node-dev`, `zod`
+- Installed: `typescript` (pinned `^5.7`, see dev-tooling saga below), `@types/node`, `@types/express`, `@types/cors`, `@types/cookie-parser`, `@types/bcrypt`, `@types/jsonwebtoken`, `@types/pg`, `tsx` (dev runner — replaced `ts-node-dev`, see below), `zod`
 - `backend/tsconfig.json` configured: `rootDir: "./src"`, `outDir: "./dist"`, `module: "commonjs"`, `target: "es2022"`, `types: ["node"]`, `strict: true` kept, `verbatimModuleSyntax` REMOVED (conflicted with commonjs+import/export), jsx line removed (backend-only config)
 - `package.json` scripts added: `"build": "tsc"`, `"dev": "ts-node-dev --respawn src/index.ts"` (index.ts doesn't exist yet — expected to error until index.js migrated)
 - Folder structure: `backend/src/` created, mirrors old structure (`src/models/`, `src/middleware/`, will add `src/controllers/`, `src/routes/`, `src/config/`, `src/types/` etc. as migration proceeds)
@@ -56,7 +56,24 @@ Old `routes/*.js` — **DELETED ✅ (2026-08-26)**.
 
 10. **`src/index.ts`** — COMPLETE ✅ (2026-08-27). `require`→`import` across the board. Dropped manual `require("dotenv").config()` — confirmed `env.ts`'s `import "dotenv/config"` fires transitively via `db.ts` import, no separate call needed. `pool` imported default (`import pool from "./models/db"`). All 4 route routers imported default (`import authRoutes from "./routes/auth"` style). User deliberately kept all `import` statements scattered next to their usage (not hoisted to top) — readability choice for learning ("oh so we need this route so we importing"), not a `tsc` issue (ES imports hoist regardless of position). Mentor flagged as non-standard convention for portfolio-readiness later; user's call for now. `npx tsc --noEmit` clean.
 
-**BACKEND TYPESCRIPT MIGRATION — FULLY COMPLETE ✅ (2026-08-27).** All of config, models, middleware, types, utils, controllers, routes, and entry point (`index.ts`) migrated. Old `.js` originals all deleted. `npm run dev` (ts-node-dev) now points at a fully-TS backend.
+**BACKEND TYPESCRIPT MIGRATION — FULLY COMPLETE ✅ (2026-08-27).** All of config, models, middleware, types, utils, controllers, routes, and entry point (`index.ts`) migrated. Old `.js` originals all deleted.
+
+### Dev tooling saga — `ts-node-dev` → `tsx` (2026-08-27)
+
+First `npm run dev` after full migration crashed. Diagnosed step by step (user ran everything, mentor diagnosed from pasted output only — no unverified guesses):
+
+1. **`TypeError: Cannot read properties of undefined (reading 'fileExists')`** — root cause: `typescript` had drifted to `^7.0.2` (brand-new preview release) via earlier `npm install`, but `ts-node`/`ts-node-dev` (10.9.2) reach into TS internals that changed shape in v7. Fix: pinned back to `typescript@^5.7` (`npm install -D typescript@^5.7`) — stable, what the whole `ts-node` ecosystem is actually built against. Frontend unaffected — Vite calls `tsc` directly, no `ts-node` compatibility layer involved.
+2. **`error TS1259: ... can only be default-imported using the 'esModuleInterop' flag`** — TS7 had defaulted this on; TS5 doesn't. Added `"esModuleInterop": true` to `tsconfig.json`.
+3. **`error TS2339: Property 'user' does not exist on type 'Request<...>'`** in `verifyToken.ts`, despite `npx tsc --noEmit` (full project check) passing clean. Root cause (verified, not guessed): `tsc` type-checks every file matched by `include`, whether anything imports it or not. `ts-node`/`ts-node-dev` instead lazily compiles only files actually `require()`d at runtime — `src/types/express.d.ts` (the ambient declaration-merging file that adds `req.user`) is type-only, erased at compile, never actually `require()`d by anything — so `ts-node`'s program never loaded it. Fix attempts: added `"include": ["src/**/*.ts"]` (top-level tsconfig key, first added inside `compilerOptions` by mistake — corrected) + `"ts-node": { "files": true }` block. Neither alone fixed it — `ts-node-dev` doesn't reliably read the `ts-node` block from tsconfig; it has its own CLI flag. Final fix: added `--files` flag directly to the dev script: `ts-node-dev --respawn --files src/index.ts`. Worked.
+
+**Decision: dropped `ts-node-dev` entirely, switched to `tsx`.** `ts-node-dev` is effectively unmaintained (ships stale `ts-node@10.9.2`, exactly the fragility that caused steps 1–3 above) — not worth keeping now that a fix was found, since the underlying tool is the liability. `tsx` (esbuild-based — strips types and runs, no real type-checking) is the current industry-standard dev runner: faster, actively maintained, immune to this whole class of TS-internals breakage. Tradeoff explained to user: `tsx` catches zero type errors at runtime — `npx tsc --noEmit` must be run separately/manually now to catch what `tsx` won't. User has this habit already from the migration (`tsc --noEmit` after every file), so continuing it post-migration is the plan.
+
+**Applied:**
+```bash
+npm install -D tsx
+npm uninstall ts-node-dev ts-node
+```
+`package.json` `dev` script → `"dev": "tsx watch src/index.ts"`. Verified: `npm run dev` → clean start, `Server started` + `DB connected successfully` logged, noticeably faster reload than `ts-node-dev`.
 
 ### Decision (2026-08-22): swap `as UserPayload` → zod runtime validation
 

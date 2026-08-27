@@ -10,6 +10,7 @@
     "module": "commonjs",
     "target": "es2022",
     "types": ["node"],
+    "esModuleInterop": true,
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -38,5 +39,9 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts"],
+  "ts-node": {
+    "files": true
   }
 }

@@ -1,6 +1,6 @@
 import leftSideImage from "../assets/register.jpg";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // Shape of one suggestion returned by the backend's location-search proxy
 interface LocationSuggestion {
@@ -17,6 +17,7 @@ function Register() {
   const [phone_number, setPhoneNumber] = useState("");
   const [role, setRole] = useState("");
   const [registerMessage, setRegisterMessage] = useState("");
+  const [registerFailed, setRegisterFailed] = useState(false);
 
   // for debounce
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -39,6 +40,15 @@ function Register() {
     useState<LocationSuggestion | null>(null);
 
   const navigate = useNavigate();
+
+  // Auto-dismiss the toast after a few seconds instead of leaving it on screen forever.
+  // Re-runs every time a new message comes in; cleanup cancels a stale timer if the
+  // component unmounts (e.g. we already navigated away) before it fires.
+  useEffect(() => {
+    if (!registerMessage) return;
+    const timer = setTimeout(() => setRegisterMessage(""), 4000);
+    return () => clearTimeout(timer);
+  }, [registerMessage]);
 
   // 'Location input' handler function - This is for displaying location suggestion as user types
   async function handleLocationInput(e: React.ChangeEvent<HTMLInputElement>) {
@@ -99,7 +109,16 @@ function Register() {
     const data = await response.json();
 
     if (response.ok) {
+      setRegisterFailed(false);
       setRegisterMessage(data.message);
+      // Clear the form — matters if navigation ever changes (e.g. user comes back)
+      setUsername("");
+      setEmail("");
+      setPassword("");
+      setPhoneNumber("");
+      setRole("");
+      setLocation("");
+      setSelectedLocation(null);
       navigate("/dashboard", {
         state: {
           username: data.user.username,
@@ -107,23 +126,36 @@ function Register() {
         },
       });
     } else {
+      setRegisterFailed(true);
       setRegisterMessage(data.message ?? "Something went wrong");
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-100">
+      {/* Toast — floats above everything, doesn't affect card layout/size at all */}
+      {registerMessage && (
+        <div
+          className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 rounded-full px-6 py-2 text-sm font-medium shadow-lg ${
+            registerFailed
+              ? "bg-red-50 text-red-600"
+              : "bg-green-50 text-green-600"
+          }`}
+        >
+          {registerMessage}
+        </div>
+      )}
       <div className="flex flex-col md:flex-row md:rounded-2xl shadow-2xl overflow-hidden md:w-225 w-full md:h-150 md:mx-5">
         {/* Left side image */}
-        <div className="w-full md:w-1/2">
+        <div className="relative w-full md:w-1/2 h-48 md:h-auto">
           <img
             src={leftSideImage}
             alt="registerImage"
-            className="w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
           />
         </div>
         {/* Right side form */}
-        <div className="w-full md:w-1/2 p-10">
+        <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
           <h2 className="text-2xl md:text-3xl font-bold">JOIN THE LEAGUE</h2>
           <p className="mt-2">Create an account</p>
           {/* Register form */}
@@ -223,11 +255,6 @@ function Register() {
             >
               <span>Create Account</span>
             </button>
-            {registerMessage && (
-              <p className="text-sm text-center text-red-500">
-                {registerMessage}
-              </p>
-            )}
             {/* 'Already have an account?' part */}
             <p className="text-sm text-center text-gray-500">
               Already have an account?{" "}
