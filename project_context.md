@@ -157,9 +157,38 @@ Built directly by mentor (per role split above), brief walkthrough given after.
 
 **Verified:** `npx tsc -b` clean, `npm run build` clean (bundles unchanged size-wise, only logic/type diffs).
 
----
+## Post-migration frontend fixes (2026-08-27, same day)
 
----
+Built directly by mentor (frontend role split). All in `Login.tsx` / `Register.tsx`.
+
+- **Card layout bugs (Register, then mirrored to Login):**
+  - Message text pushed later content down + got clipped by `overflow-hidden` + fixed `h-150` — root cause of a chain of attempted fixes (`min-h` alone doesn't work either — see next bullet).
+  - Discovered (verified live via browser JS, not guessed): `h-full`/`object-cover` on the `<img>` needs its parent to have a **definite** height — `min-height` doesn't qualify, only a real `height` does. With `min-height`, the image fell back to its own natural (tall/portrait) aspect ratio and dragged the whole card up to ~800px.
+  - **Real fix:** decoupled the image from percentage-height rules entirely — `relative` wrapper + `<img className="absolute inset-0 w-full h-full object-cover">`. Fills whatever height the row resolves to, no percentage-resolution quirks. This is the standard pattern for this split-image-card layout.
+  - Card went back to a **fixed** `md:h-150` (600px, not `min-h`) — form column got `flex flex-col justify-center` so short content is vertically centered instead of stuck at the top with dead space below.
+  - **Message moved out of the flow entirely** — was still causing the image to visibly resize/reflow when it appeared (since card height was tied to content). Now rendered as a `fixed`-position toast (top-center, pill shape, green for success / red for failure) that doesn't participate in card layout at all — card height literally cannot change now.
+  - Toast auto-dismisses after 4s via `useEffect` + `setTimeout`, cleanup cancels a stale timer on unmount/message-change.
+- **Register auto-login bug (real, functional, not just cosmetic):** `Register.tsx` never called `setAccessToken`/`setRole`/`setUsername` from `useAuth()` after a successful register — user was never actually logged in despite backend returning a valid token. Also `navigate(..., { state: { username: data.user.username, ... } })` — backend response has no `user` wrapper (`{ message, accessToken, username, role }`, flat) — `data.user` was `undefined`, so `data.user.username` threw, silently killing the rest of `handleSubmit` (no try/catch around the fetch). That's why nothing visibly happened on click. Fixed both: wired the three context setters (aliased to avoid clashing with the form's own local `role`/`username` state), fixed the property path to `data.username`.
+- **Register form now clears on success** — all fields + `selectedLocation` reset to empty/null (matters if navigation ever changes away from immediate-redirect).
+- **Register post-register navigation was hardcoded to `/dashboard`** regardless of role (so an owner registering landed on the user dashboard) — now branches on `data.role` same as `Login.tsx` already did.
+- **Login error message was hardcoded** to `"Something went wrong"` on any failure instead of using the backend's actual message (`"Invalid email or password"`, etc.) — fixed to use `data.message ?? "Something went wrong"`, same pattern Register already had.
+
+All verified via `npx tsc -b` (clean each time) + live measurements in the Browser pane (`getBoundingClientRect()` checks on card/image height), not just visual guessing.
+
+## Registration form validation — IN PROGRESS (started 2026-08-27)
+
+Decided: validate on **both** frontend and backend — frontend for UX (instant feedback), backend is the actual security boundary (frontend checks are trivially bypassed — Postman, curl, disabled JS). Backend piece stays Socratic (user builds), frontend piece built directly by mentor once backend is ready.
+
+**Planned validations (discussed, not yet built):**
+1. Password — min length (8+), open question posed to user: length-only (modern NIST-style guidance) vs forced complexity rules (uppercase/number/symbol, older convention)
+2. Confirm-password field — doesn't exist yet, standard on every register form
+3. Phone number — exactly 10 digits, Nepali mobile prefix check (`97`/`98`) — regex `/^9[78]\d{8}$/`
+4. Email format check (partially free via `type="email"`)
+5. Username — min/max length, trim, maybe disallow spaces
+6. Location — must be picked from dropdown, not just typed (already a known pending item, see "Pending frontend validations" further below)
+7. `required` attribute on all fields (already a known pending item)
+
+**Approach decided:** backend currently validates via a pile of `if (!x || !y || ...)` truthy checks inline in the `register` controller — shallow, no format/length checking. User already knows `zod` from `config/env.ts`. Socratic session started: asked user (1) what `zod` was actually doing in `env.ts` — validating a shape, not something env-specific — and (2) given the project's routes→controllers→models separation-of-concerns principle, where should this validation logic live — inline in the controller, or as a separate step before it runs. **Paused here — user has not yet answered, resuming next session.** No code written yet for this feature.
 
 ## Mentor Role (CRITICAL — always follow)
 
