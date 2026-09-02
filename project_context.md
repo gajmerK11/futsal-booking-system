@@ -175,20 +175,33 @@ Built directly by mentor (frontend role split). All in `Login.tsx` / `Register.t
 
 All verified via `npx tsc -b` (clean each time) + live measurements in the Browser pane (`getBoundingClientRect()` checks on card/image height), not just visual guessing.
 
-## Registration form validation — IN PROGRESS (started 2026-08-27)
+## Registration form validation — IN PROGRESS (started 2026-08-27, resumed 2026-09-02)
 
 Decided: validate on **both** frontend and backend — frontend for UX (instant feedback), backend is the actual security boundary (frontend checks are trivially bypassed — Postman, curl, disabled JS). Backend piece stays Socratic (user builds), frontend piece built directly by mentor once backend is ready.
 
-**Planned validations (discussed, not yet built):**
-1. Password — min length (8+), open question posed to user: length-only (modern NIST-style guidance) vs forced complexity rules (uppercase/number/symbol, older convention)
-2. Confirm-password field — doesn't exist yet, standard on every register form
-3. Phone number — exactly 10 digits, Nepali mobile prefix check (`97`/`98`) — regex `/^9[78]\d{8}$/`
-4. Email format check (partially free via `type="email"`)
-5. Username — min/max length, trim, maybe disallow spaces
-6. Location — must be picked from dropdown, not just typed (already a known pending item, see "Pending frontend validations" further below)
-7. `required` attribute on all fields (already a known pending item)
+**Planned validations (discussed, not yet all built):**
+1. Password — min length (8+) — DONE via zod `.min(8)`
+2. Confirm-password field — schema-side DONE (`.refine()`), **frontend field still missing** (see below)
+3. Phone number — regex DONE (`/^9\d{9}$/` on `phone_number`)
+4. Email format — DONE (`z.email()`)
+5. Username — currently just `z.string()`, no min/max/trim yet
+6. Location — must be picked from dropdown, not just typed (still pending)
+7. `required` attribute on all fields (still pending)
 
-**Approach decided:** backend currently validates via a pile of `if (!x || !y || ...)` truthy checks inline in the `register` controller — shallow, no format/length checking. User already knows `zod` from `config/env.ts`. Socratic session started: asked user (1) what `zod` was actually doing in `env.ts` — validating a shape, not something env-specific — and (2) given the project's routes→controllers→models separation-of-concerns principle, where should this validation logic live — inline in the controller, or as a separate step before it runs. **Paused here — user has not yet answered, resuming next session.** No code written yet for this feature.
+**Approach decided (answered 2026-09-02):** separation-of-concerns question resolved — validation runs as **middleware**, not inline in controller. Controller stays business-logic-only.
+
+**Progress this session (2026-09-02):**
+- `backend/src/validators/auth.ts` — `registerSchema` built with zod: username, email, password, confirmPassword, phone_number, role, location, lat, lon. `export` added (was missing, caused `undefined` import). Field names settled as `lat`/`lon` (not `latitude`/`longitude`) — matches existing `Register.tsx` payload and controller's `req.body.lat`/`req.body.lon`, avoids touching either.
+- `.refine()` added for password/confirmPassword match — taught why object-shape validation can't do cross-field checks (each field validated in isolation, no sibling access), `.refine()` runs after full object parses, has access to whole object. `path: ["confirmPassword"]` attaches error to right field.
+- **Wiring attempt (in progress):** user tried `router.post("/register", registerSchema, register)` in `routes/auth.ts` — caught 2 issues via Socratic: (1) `registerSchema` wasn't exported yet (fixed), (2) `registerSchema` is a schema object, not an Express middleware function — can't sit directly in route handler list, needs a wrapper.
+- Discussed inline-in-controller alternative (`registerSchema.parse(req.body)` as first line in try block, `ZodError` instanceof check in catch) — shown as illustration, user chose middleware approach instead for clean separation + reusability.
+- **Industry-standard pattern settled:** generic `validate(schema)` middleware **factory** in `middleware/validate.ts` (not a one-off `validateRegister` function) — reusable across any route (`validate(registerSchema)`, `validate(loginSchema)` later, etc.). Factory internally does `req.body = schema.parse(req.body)` (confirmed `.parse()` returns new object, doesn't mutate `req.body` itself — so controller downstream automatically gets typed/coerced data via reassignment, no controller changes needed) + `instanceof ZodError` check → 400, else → `next(error)`.
+- **Not yet built** — user paused before writing `middleware/validate.ts`, resuming later.
+
+**Still open after middleware built:**
+- `Register.tsx` has no `confirmPassword` field at all (no state, no input, not sent in payload) — schema requires it, form doesn't collect it yet. Frontend piece, mentor builds directly per role split.
+- Username min/max/trim rules not yet added to schema.
+- Location-must-be-selected-from-dropdown check still pending.
 
 ## Mentor Role (CRITICAL — always follow)
 
